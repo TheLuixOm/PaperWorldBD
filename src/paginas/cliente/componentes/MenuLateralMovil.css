@@ -1,0 +1,128 @@
+.menuLateralMovil {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.menuLateralMovilAbierto {
+  pointer-events: auto;
+}
+
+.menuLateralMovilOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.42);
+  border: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.menuLateralMovilAbierto .menuLateralMovilOverlay {
+  opacity: 1;
+}
+
+.menuLateralMovilPanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: min(300px, 82vw);
+  background: #f8fafc;
+  border-right: 1px solid rgba(34, 88, 155, 0.1);
+  transform: translateX(-102%);
+  transition: transform 0.18s ease;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Montserrat', 'Inter', sans-serif;
+}
+
+.menuLateralMovilAbierto .menuLateralMovilPanel {
+  transform: translateX(0);
+}
+
+.menuLateralMovilTop {
+  padding: 6px 6px 12px;
+}
+
+.menuLateralMovilClip {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.menuLateralMovilNav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menuLateralMovilItem {
+  height: 40px;
+  border-radius: 10px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.menuLateralMovilItem:focus-visible {
+  outline: 2px solid rgba(6, 123, 182, 0.35);
+  outline-offset: 2px;
+}
+
+.menuLateralMovilItemActivo {
+  background: #067bb6;
+  color: #ffffff;
+}
+
+.menuLateralMovilIcono {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menuLateralMovilIcono svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.menuLateralMovilSeparador {
+  height: 1px;
+  background: rgba(34, 88, 155, 0.1);
+  margin: 14px 0;
+}
+
+.menuLateralMovilBloque {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menuLateralMovilLabel {
+  margin: 0;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 900;
+  color: #94a3b8;
+  letter-spacing: 0.08em;
+}
+
+.menuLateralMovilItemBoton {
+  text-align: left;
+}

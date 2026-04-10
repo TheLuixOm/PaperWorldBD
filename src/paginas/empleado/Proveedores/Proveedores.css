@@ -1,0 +1,29 @@
+.inventarioTitulo {
+	text-transform: uppercase;
+}
+
+.inventarioSubtitulo {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.inventarioSubtitulo::before {
+	content: '';
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: #1990d0;
+	flex: 0 0 auto;
+}
+
+.inventarioFila td:nth-child(7) {
+	font-weight: 700;
+}
+
+@media (max-width: 820px) {
+	.inventarioSubtitulo::before {
+		width: 8px;
+		height: 8px;
+	}
+}

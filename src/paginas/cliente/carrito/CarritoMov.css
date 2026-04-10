@@ -1,0 +1,303 @@
+.carritoMovHeader {
+  border-bottom: 1px solid rgba(34, 88, 155, 0.08);
+}
+
+@keyframes carritoMovEntrada {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.carritoMovAcciones {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.carritoMovAccionCarrito {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(6, 123, 182, 0.08);
+  color: #067bb6;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.carritoMovCarritoIcono svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.carritoMovCarritoBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #067bb6;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+}
+
+.carritoMovTotalTop {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 900;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.carritoMovMain {
+  padding-top: 10px;
+  animation: carritoMovEntrada 220ms ease-out both;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carritoMovMain {
+    animation: none;
+  }
+}
+
+.carritoMovTitulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 0 2px;
+}
+
+.carritoMovTituloTexto {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 1000;
+  color: #0f172a;
+}
+
+.carritoMovTituloBadge {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(6, 123, 182, 0.12);
+  color: #067bb6;
+  font-size: 11px;
+  font-weight: 1000;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  transform: translateY(-10px);
+}
+
+.carritoMovLinea {
+  height: 1px;
+  background: rgba(15, 23, 42, 0.14);
+}
+
+.carritoMovLista {
+  display: flex;
+  flex-direction: column;
+}
+
+.carritoMovItem {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 12px;
+  padding: 12px 0;
+  position: relative;
+}
+
+.carritoMovItemImagen {
+  width: 74px;
+  height: 74px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.25);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.carritoMovItemImagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carritoMovItemInfo {
+  min-width: 0;
+}
+
+.carritoMovItemEnc {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 12px;
+}
+
+.carritoMovItemIzq {
+  min-width: 0;
+}
+
+.carritoMovItemDer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.carritoMovItemNombre {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 1000;
+  color: #0f172a;
+}
+
+.carritoMovItemPrecio {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 900;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.carritoMovItemMeta {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.carritoMovItemMeta p {
+  margin: 2px 0;
+}
+
+.carritoMovItemMeta span {
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.carritoMovQtyRow {
+  display: grid;
+  grid-template-columns: 28px 34px 28px;
+  gap: 10px;
+  align-items: center;
+}
+
+.carritoMovQtyBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 1000;
+  display: grid;
+  place-items: center;
+}
+
+.carritoMovQtyValue {
+  width: 34px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+}
+
+.carritoMovTrash {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  display: grid;
+  place-items: center;
+}
+
+.carritoMovTrash svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.carritoMovSeparador {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: rgba(15, 23, 42, 0.12);
+}
+
+.carritoMovResumen {
+  margin-top: auto;
+  padding-top: 12px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+}
+
+.carritoMovResumenFila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+}
+
+.carritoMovResumenLabel {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 1000;
+  color: #0f172a;
+}
+
+.carritoMovResumenValor {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 1000;
+  color: #0f172a;
+}
+
+.carritoMovComprar {
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: #067bb6;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.carritoMovEspaciador {
+  height: 10px;
+}
+
+.carritoMovVolver {
+  display: none;
+}

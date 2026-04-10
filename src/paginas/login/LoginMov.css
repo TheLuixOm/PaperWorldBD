@@ -1,0 +1,166 @@
+.login-mov-page {
+  min-height: 100svh;
+  background: #fefefe;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.login-mov-hero {
+  position: relative;
+  min-height: 60svh;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 16px 78px;
+}
+
+.login-mov-hero::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 120px;
+  background: linear-gradient(to bottom, rgba(254, 254, 254, 0), #fefefe 88%);
+  pointer-events: none;
+}
+
+.login-mov-brand-card {
+  position: relative;
+  z-index: 1;
+  background: rgba(254, 254, 254, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 12px;
+  padding: 10px 18px 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+}
+
+.login-mov-brand {
+  margin: 0;
+  color: #1f1f1f;
+  font-size: clamp(62px, 17vw, 82px);
+  line-height: 0.98;
+  font-family: 'Hurricane' ,cursive;
+  font-weight: 500;
+  text-shadow: 0 4px 4px rgba(0, 0, 0, 0.22);
+}
+
+.login-mov-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 18px;
+  margin-top: -150px;
+  padding: 0 16px 24px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0%,
+    #ffffff 34%,
+    #ffffff 66%,
+    #b0b0b0 100%
+  );
+  position: relative;
+  z-index: 1;
+}
+
+.login-mov-card {
+  width: min(310px, 88vw);
+  background: rgba(254, 254, 254, 0.82);
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 12px 12px 10px;
+}
+
+.login-mov-label {
+  display: block;
+  color: #2a2a2a;
+  font-size: clamp(16px, 4.5vw, 18px);
+  margin-bottom: 6px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.login-mov-input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid #d4d4d4;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0 10px;
+  margin-bottom: 10px;
+  font-size: clamp(15px, 4.2vw, 17px);
+  color: #2a2a2a;
+}
+
+.login-mov-input::placeholder {
+  color: #b6b6b6;
+}
+
+.login-mov-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.login-mov-button {
+  height: 36px;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: clamp(15px, 4.3vw, 17px);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: transform 160ms ease, filter 160ms ease, background-color 160ms ease;
+  will-change: transform;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .login-mov-button:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.02);
+  }
+}
+
+.login-mov-button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.login-mov-button-primary {
+  background: #067bb6;
+}
+
+.login-mov-button-secondary {
+  background: #2d2d2d;
+}
+
+.login-mov-forgot {
+  width: 100%;
+  margin-top: 10px;
+  border: none;
+  background: transparent;
+  color: #424242;
+  text-align: center;
+  font-size: clamp(14px, 4vw, 16px);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  cursor: pointer;
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+@media (hover: hover) {
+  .login-mov-forgot:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.02);
+  }
+}
+
+.login-mov-forgot:active {
+  transform: translateY(0) scale(0.98);
+}

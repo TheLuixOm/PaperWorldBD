@@ -1,0 +1,255 @@
+.carritoCliente {
+  background: #ffffff;
+}
+
+@keyframes carritoClienteEntrada {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.carritoClienteContenido {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 14px 28px 40px;
+  flex: 1;
+  animation: carritoClienteEntrada 220ms ease-out both;
+  will-change: transform, opacity;
+}
+
+@media (max-width: 640px) {
+  .carritoClienteContenido {
+    padding: 14px 18px 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carritoClienteContenido {
+    animation: none;
+  }
+}
+
+.carritoClienteTitulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.carritoClienteTitulo h1 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 1000;
+  color: #0f172a;
+}
+
+.carritoClienteTituloIcono {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  color: #067BB6;
+  display: grid;
+  place-items: center;
+}
+
+.carritoClienteTituloIcono svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.carritoClienteTituloBadge {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #067BB6;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.carritoClienteSeparador {
+  height: 1px;
+  background: rgba(15, 23, 42, 0.22);
+  margin: 18px 0 0;
+}
+
+.carritoClienteLista {
+  margin-top: 0;
+}
+
+.carritoClienteFila {
+  display: grid;
+  grid-template-columns: 96px 1fr 160px 170px;
+  gap: 18px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.22);
+  align-items: center;
+}
+
+.carritoClienteImg {
+  width: 96px;
+  height: 76px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.25);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.carritoClienteImg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carritoClienteInfo {
+  min-width: 0;
+}
+
+.carritoClienteNombre {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 1000;
+  color: #0f172a;
+}
+
+.carritoClienteMeta {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.25;
+}
+
+.carritoClienteMeta p {
+  margin: 2px 0;
+}
+
+.carritoClienteMeta strong {
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.carritoClienteQty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+
+.carritoClienteQtyBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 1000;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.carritoClienteQtyValor {
+  min-width: 38px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.22);
+  display: grid;
+  place-items: center;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.carritoClienteAcciones {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.carritoClientePrecio {
+  margin: 0;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 1000;
+}
+
+.carritoClienteRemove {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(148, 163, 184, 0.28);
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.carritoClienteResumen {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0 0;
+}
+
+.carritoClienteResumenLabel {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 1000;
+  color: #0f172a;
+}
+
+.carritoClienteResumenValor {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 1000;
+  color: #0f172a;
+}
+
+.carritoClienteComprar {
+  height: 34px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: none;
+  background: #067BB6;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.carritoClienteFooter {
+  min-height: 76px;
+  height: auto;
+  background: #067BB6;
+  margin-top: auto;
+}
+
+@media (max-width: 1020px) {
+  .carritoClienteFila {
+    grid-template-columns: 90px 1fr 140px 150px;
+  }
+}

@@ -1,0 +1,349 @@
+.empleadoLayout {
+  --anchoSidebar: clamp(220px, 22vw, 300px);
+  min-height: 100svh;
+  height: 100svh;
+  display: grid;
+  grid-template-columns: var(--anchoSidebar) minmax(0, 1fr);
+  background: #ffffff;
+  color: #2c2c2c;
+  font-family: 'Inter', sans-serif;
+  transition: grid-template-columns 0.25s ease;
+  overflow: hidden;
+}
+
+.empleadoBarraMovil {
+  display: none;
+}
+
+.empleadoOverlayMovil {
+  display: none;
+}
+
+.empleadoLayoutColapsado {
+  --anchoSidebar: 96px;
+}
+
+.empleadoSidebar {
+  background: #f2f4fa;
+  padding: 28px 18px 24px;
+  border-right: 1px solid rgba(34, 88, 155, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  overflow: hidden;
+}
+
+.empleadoMarca {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 8px;
+}
+
+.empleadoLogo {
+  margin: 0;
+  font-family: 'Hurricane', cursive;
+  font-size: 52px;
+  font-weight: 400;
+  color: #7f8794;
+  text-shadow: 0 2px 2px rgba(0, 0, 0, 0.12);
+  line-height: 1;
+  white-space: nowrap;
+  transition: opacity 0.2s ease, max-width 0.25s ease;
+  max-width: 180px;
+}
+
+.empleadoBotonClip {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empleadoIconoClip {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.empleadoMenu,
+.empleadoSoporte {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.empleadoSoporte {
+  margin-top: auto;
+}
+
+.empleadoTituloSeccion {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #8793a4;
+  letter-spacing: 0.08em;
+  padding: 0 10px;
+}
+
+.empleadoMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  color: #5f6b7a;
+  text-decoration: none;
+  font-size: 17px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.empleadoMenuItem:hover {
+  background: rgba(25, 144, 208, 0.08);
+  color: #1990d0;
+}
+
+.empleadoMenuItemActivo {
+  background: #1990d0;
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(25, 144, 208, 0.22);
+}
+
+.empleadoMenuItemActivo:hover {
+  background: #1990d0;
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(25, 144, 208, 0.22);
+}
+
+
+.empleadoMenuIcono {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.empleadoMenuIcono svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.95;
+}
+
+.empleadoTextoItem {
+  white-space: nowrap;
+}
+
+.empleadoContenido {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.empleadoLayoutColapsado .empleadoLogo,
+.empleadoLayoutColapsado .empleadoTextoItem,
+.empleadoLayoutColapsado .empleadoTituloSeccion {
+  display: none;
+}
+
+.empleadoLayoutColapsado .empleadoLogo {
+  max-width: 0;
+}
+
+.empleadoLayoutColapsado .empleadoMenuItem {
+  justify-content: center;
+  gap: 0;
+  padding: 10px;
+}
+
+@media (max-width: 1280px) {
+  .empleadoSidebar {
+    padding: 22px 14px 20px;
+    gap: 16px;
+  }
+
+  .empleadoLogo {
+    font-size: 44px;
+  }
+
+  .empleadoMenuItem {
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+
+  .empleadoMenuIcono {
+    width: 20px;
+    height: 20px;
+  }
+
+  .empleadoMenuIcono svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .empleadoLayout {
+    --anchoSidebar: 232px;
+  }
+
+  .empleadoLayoutColapsado {
+    --anchoSidebar: 84px;
+  }
+}
+
+@media (max-width: 820px) {
+  .empleadoLayout {
+    --anchoSidebar: 1fr;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    position: relative;
+  }
+
+  .empleadoBarraMovil {
+    display: flex;
+    align-items: center;
+    min-height: 76px;
+    padding: 8px 12px;
+    background: #f2f4fa;
+    border-bottom: 1px solid rgba(34, 88, 155, 0.08);
+    z-index: 40;
+  }
+
+  .empleadoMarcaMovil {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    column-gap: 8px;
+  }
+
+  .empleadoEspaciadorMovil {
+    width: 42px;
+    height: 42px;
+    display: block;
+  }
+
+  .empleadoCentroMovil {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .empleadoBotonMenuMovil {
+    width: 42px;
+    height: 42px;
+    border: 1px solid #d6dee9;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #6b7280;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    cursor: pointer;
+    justify-self: start;
+  }
+
+  .empleadoBotonMenuMovil span {
+    width: 18px;
+    height: 2px;
+    border-radius: 999px;
+    background: #6b7280;
+    display: block;
+  }
+
+  .empleadoIconoClipMovil {
+    width: 34px;
+    height: 34px;
+    margin-left: 12px;
+    object-fit: contain;
+    flex: 0 0 auto;
+    justify-self: center;
+  }
+
+  .empleadoLogoMovil {
+    margin: 0;
+    font-family: 'Hurricane', cursive;
+    font-size: 48px;
+    font-weight: 400;
+    color: #454a57;
+    line-height: 1;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .empleadoSidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 84vw);
+    border-right: 1px solid rgba(34, 88, 155, 0.08);
+    border-bottom: none;
+    padding: 20px 14px 18px;
+    gap: 12px;
+    z-index: 70;
+    transform: translateX(-104%);
+    transition: transform 0.24s ease;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2);
+  }
+
+  .empleadoLayoutMenuMovilAbierto .empleadoSidebar {
+    transform: translateX(0);
+  }
+
+  .empleadoLogo {
+    font-size: 38px;
+  }
+
+  .empleadoMenu,
+  .empleadoSoporte {
+    gap: 8px;
+  }
+
+  .empleadoMenuItem {
+    min-height: 40px;
+    font-size: 14px;
+    padding: 9px 10px;
+  }
+
+  .empleadoContenido {
+    overflow: auto;
+  }
+
+  .empleadoOverlayMovil {
+    display: block;
+    position: fixed;
+    inset: 0;
+    border: none;
+    background: rgba(15, 23, 42, 0.28);
+    z-index: 60;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .empleadoLayoutColapsado .empleadoSidebar {
+    max-height: none;
+    padding-bottom: 18px;
+  }
+}

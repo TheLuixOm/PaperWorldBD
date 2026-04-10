@@ -1,0 +1,304 @@
+.register_page {
+    height: 100svh;
+    min-height: 100svh;
+	background: #ececec;
+	display: flex;
+	align-items: stretch;
+	justify-content: stretch;
+	padding: 0;
+    overflow: hidden;
+	box-sizing: border-box;
+	font-family: 'Inter', sans-serif;
+}
+
+.register_layout {
+    width: 100%;
+    height: 100%;
+    min-height: 100svh;
+    background: #f2f2f2;
+    display: grid;
+    grid-template-columns: 1fr 1.06fr;
+    overflow: hidden;
+}
+
+.contenido_registro {
+    position: relative;
+    display: flex;
+    background: #ffffff;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 72px 34px 48px;
+}
+
+.icono_marca {
+    width: 85px;
+    height: 85px;
+    object-fit: cover;
+    display: inline-block;
+}
+
+.register_header {
+    display: contents;
+    align-items: center;
+    justify-content: center;
+    width: min(500px, 100%);
+    margin-bottom: 28px;
+    font-family: 'Inter';
+    font-weight: 500;
+}
+
+.register_marca {
+    margin: 0;
+    color: #2c2c2c;
+    font-size: clamp(120px, 12vw, 124px);
+    line-height: 0.98;
+    font-family: 'Hurricane', 'Segoe Script', cursive;
+    font-weight: 500;
+    text-shadow: 0 4px 4px rgba(0, 0, 0, 0.22);
+}
+
+.register_submarca {
+    margin: 12px 0 0;
+    color: #2c2c2c;
+    font-size: 22px;
+    line-height: 1.2;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+}
+
+.register_descripcion {
+    margin: 12px 0 24px;
+    color: #2c2c2c;
+    font-size: 18px;
+    line-height: 1.35;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+}
+
+.register_descripcion a,
+.register_descripcion .register_link {
+    color: #067bb6;
+    font-weight: 500;
+    text-decoration: none;
+    font-size: 18px;
+    line-height: 1.35;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+}
+
+.register_descripcion .register_link {
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.register_descripcion .register_link:disabled {
+    cursor: default;
+}
+
+.register_card {
+    width: min(460px, 100%);
+    background: #ffffff;
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    padding: 22px 24px 18px;
+    box-shadow: 0 2px 1px rgba(0, 0, 0, 0.06);
+    box-sizing: border-box;
+}
+
+.misma_linea {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+#nombre,
+#apellido {
+    width: calc(50% - 7px);
+}
+
+.register_input {
+    width: 100%;
+    height: 50px;
+    border-radius: 10px;
+    border: 1px solid #d8d8d8;
+    padding: 0 14px;
+    font-size: 18px;
+    color: #2c2c2c;
+    box-sizing: border-box;
+    background: #ffffff;
+    margin-bottom: 14px;
+}
+
+.register_input::placeholder {
+    color: #b3b3b3;
+}
+
+.register_input:focus-visible {
+    outline: 2px solid #067bb6;
+    outline-offset: 0;
+}
+
+.fecha {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.fecha_select {
+    height: 50px;
+    border-radius: 10px;
+    border: 1px solid #d8d8d8;
+    padding: 0 12px;
+    font-size: 18px;
+    color: #b3b3b3;
+    background: #ffffff;
+    box-sizing: border-box;
+}
+
+.fecha_select:focus-visible {
+    outline: 2px solid #067bb6;
+    outline-offset: 0;
+    color: #2c2c2c;
+}
+
+
+
+.checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    border-radius: 20%;
+    border: 1px solid #c8c8c8;
+    background-color: #ffffff;
+    display: inline-grid;
+    place-content: center;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.checkbox::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    transform: scale(0);
+    transition: transform 0.15s ease-in-out;
+    clip-path: polygon(14% 44%, 0 59%, 41% 100%, 100% 22%, 84% 8%, 41% 69%);
+    box-shadow: inset 1em 1em #ffffff;
+}
+
+.checkbox:checked {
+    background-color: #067bb6;
+    border-color: #067bb6;
+}
+
+.checkbox:checked::before {
+    transform: scale(1);
+}
+
+.checkbox:focus-visible {
+    outline: 2px solid #067bb6;
+    outline-offset: 2px;
+}
+
+.fecha_select_dia,
+.fecha_select_mes {
+    width: 80px;
+}
+
+.fecha_select_anio {
+    width: 120px;
+}
+
+.register_actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 8px;
+}
+
+.register_button {
+    height: 48px;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: transform 160ms ease, filter 160ms ease, background-color 160ms ease;
+    will-change: transform;
+}
+
+@media (hover: hover) {
+    .register_button:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.02);
+    }
+}
+
+.register_button:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.register_button:disabled {
+    opacity: 0.7;
+    cursor: default;
+    transform: none;
+    filter: none;
+}
+
+.register_button_primary {
+    background: #067bb6;
+    color: #ffffff;
+}
+
+.register_button_secondary {
+    background: #2c2c2c;
+    color: #ffffff;
+}
+
+.register_visual {
+    height: 100%;
+    background: #f0f4f9;
+}
+
+.register_visual_image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+@media (max-width: 1000px) {
+    .contenido_registro {
+        padding: 40px 20px 32px;
+    }
+
+    .register_marca {
+        font-size: clamp(88px, 10vw, 104px);
+    }
+
+    .register_submarca {
+        font-size: 20px;
+    }
+
+    .register_descripcion,
+    .register_descripcion a,
+    .register_descripcion .register_link {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 500px) {
+    .register_layout {
+        grid-template-columns: 1fr;
+        min-height: 100svh;
+    }
+
+    .register_visual {
+        min-height: 240px;
+    }
+}
