@@ -71,3 +71,14 @@ export default defineConfig([
   },
 ])
 ```
+
+## Backend (PostgreSQL)
+
+El backend vive en la carpeta `Backend/` (Express + PostgreSQL).
+
+Comandos:
+
+- Instalar dependencias: `cd Backend` y `npm install`
+- Levantar API: `npm run dev` (o desde la raíz: `npm run dev:backend`)
+
+Configura `Backend/.env` a partir de `Backend/.env.example`.

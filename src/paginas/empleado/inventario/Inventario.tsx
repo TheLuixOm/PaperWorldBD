@@ -6,6 +6,15 @@ import UsuarioMenu from '../Barras/UsuarioMenu';
 import AgregarProducto, { type DatosAgregarProducto } from './AgregarProducto';
 import ModificarProducto from './ModificarProducto';
 import { type DatosModificarProducto } from './ModificarProducto';
+import {
+    actualizarProductoInventario,
+    crearProductoInventario,
+    eliminarProductoInventario,
+    formatPrecioDisplay,
+    formatProductoIdDisplay,
+    listarInventario,
+    parsePrecioInput,
+} from '../../../api/inventario';
 
 function Inventario() {
     const [textoBusqueda, setTextoBusqueda] = useState('');
@@ -20,6 +29,41 @@ function Inventario() {
     const inputBusquedaRef = useRef<HTMLInputElement | null>(null);
     const productosPorPagina = 8;
 
+    useEffect(() => {
+        let cancelado = false;
+
+        const cargar = async () => {
+            try {
+                const resp = await listarInventario({ limit: 500, offset: 0 });
+                if (cancelado) {
+                    return;
+                }
+
+                const mapeados: Producto[] = resp.items.map((it) => ({
+                    id: formatProductoIdDisplay(it.id_producto),
+                    nombre: it.nombre,
+                    categoria: it.categoria || 'sin categoria',
+                    precio: formatPrecioDisplay(it.precio),
+                    cantidad: it.cantidad,
+                    vendidos: 0,
+                    imagen: it.imagen || `https://picsum.photos/seed/${it.id_producto}/120/80`,
+                }));
+
+                setProductos(mapeados);
+            } catch (err) {
+                // Si falla la API, deja el inventario mock para no romper la UI.
+                // eslint-disable-next-line no-console
+                console.error('[inventario] no se pudo cargar desde API', err);
+            }
+        };
+
+        void cargar();
+
+        return () => {
+            cancelado = true;
+        };
+    }, []);
+
     const solicitarEliminarProducto = (producto: Producto) => {
         setProductoMenuAbiertoId(null);
         setProductoPendienteEliminar(producto);
@@ -30,10 +74,20 @@ function Inventario() {
             return;
         }
 
-        setProductos((productosActuales) =>
-            productosActuales.filter((producto) => producto.id !== productoPendienteEliminar.id)
-        );
+        const producto = productoPendienteEliminar;
         setProductoPendienteEliminar(null);
+
+        void (async () => {
+            try {
+                await eliminarProductoInventario(producto.id);
+                setProductos((productosActuales) =>
+                    productosActuales.filter((p) => p.id !== producto.id)
+                );
+            } catch (err) {
+                // eslint-disable-next-line no-console
+                console.error('[inventario] no se pudo eliminar en API', err);
+            }
+        })();
     };
 
     const cancelarEliminarProducto = () => {
@@ -142,7 +196,7 @@ function Inventario() {
         const precioConPrefijo = datosFormulario.precio.trim();
 
         return {
-            id: datosFormulario.referencia.trim() || productoBase.id,
+            id: productoBase.id,
             nombre: datosFormulario.nombre.trim() || 'Producto sin nombre',
             categoria: datosFormulario.categoria.trim() || 'sin categoria',
             precio: precioConPrefijo.startsWith('$') ? precioConPrefijo : `$ ${precioConPrefijo || '0'}`,
@@ -160,15 +214,52 @@ function Inventario() {
             return;
         }
 
-        const productoActualizado = construirProductoActualizado(productoEnEdicion, datosFormulario);
+        const productoBase = productoEnEdicion;
+        const productoActualizado = construirProductoActualizado(productoBase, datosFormulario);
 
+        // Actualiza UI optimísticamente
         setProductos((productosActuales) =>
             productosActuales.map((producto) =>
-                producto.id === productoEnEdicion.id ? productoActualizado : producto
+                producto.id === productoBase.id ? productoActualizado : producto
             )
         );
 
         cerrarVistaFormulario();
+
+        void (async () => {
+            try {
+                const precio = parsePrecioInput(datosFormulario.precio);
+                const cantidad = Number.parseInt(datosFormulario.cantidad, 10);
+                const imagen = datosFormulario.imagen?.startsWith('blob:') ? '' : datosFormulario.imagen;
+
+                const resp = await actualizarProductoInventario(productoBase.id, {
+                    nombre: datosFormulario.nombre.trim() || productoBase.nombre,
+                    referencia: datosFormulario.referencia,
+                    categoria: datosFormulario.categoria,
+                    precio,
+                    cantidad: Number.isNaN(cantidad) ? 0 : cantidad,
+                    imagen,
+                });
+
+                const it = resp.item;
+                const sincronizado: Producto = {
+                    id: formatProductoIdDisplay(it.id_producto),
+                    nombre: it.nombre,
+                    categoria: it.categoria || 'sin categoria',
+                    precio: formatPrecioDisplay(it.precio),
+                    cantidad: it.cantidad,
+                    vendidos: productoBase.vendidos,
+                    imagen: it.imagen || productoActualizado.imagen,
+                };
+
+                setProductos((productosActuales) =>
+                    productosActuales.map((p) => (p.id === productoBase.id ? sincronizado : p))
+                );
+            } catch (err) {
+                // eslint-disable-next-line no-console
+                console.error('[inventario] no se pudo guardar cambios en API', err);
+            }
+        })();
     };
 
     const guardarNuevoProducto = (datosFormulario: DatosAgregarProducto, mantenerAbierto: boolean) => {
@@ -191,6 +282,41 @@ function Inventario() {
         if (!mantenerAbierto) {
             cerrarVistaFormulario();
         }
+
+        void (async () => {
+            try {
+                const precio = parsePrecioInput(datosFormulario.precio);
+                const imagen = datosFormulario.imagen?.startsWith('blob:') ? '' : datosFormulario.imagen;
+                const resp = await crearProductoInventario({
+                    referencia: datosFormulario.referencia,
+                    nombre: datosFormulario.nombre.trim() || 'Producto sin nombre',
+                    categoria: datosFormulario.categoria,
+                    precio,
+                    cantidad: Number.isNaN(cantidad) ? 0 : cantidad,
+                    imagen,
+                });
+
+                const it = resp.item;
+                const sincronizado: Producto = {
+                    id: formatProductoIdDisplay(it.id_producto),
+                    nombre: it.nombre,
+                    categoria: it.categoria || 'sin categoria',
+                    precio: formatPrecioDisplay(it.precio),
+                    cantidad: it.cantidad,
+                    vendidos: 0,
+                    imagen: it.imagen || nuevoProducto.imagen,
+                };
+
+                setProductos((productosActuales) => {
+                    // Reemplaza el item optimístico (por id o por nombre+imagen)
+                    const sinDuplicados = productosActuales.filter((p) => p.id !== nuevoProducto.id);
+                    return [sincronizado, ...sinDuplicados];
+                });
+            } catch (err) {
+                // eslint-disable-next-line no-console
+                console.error('[inventario] no se pudo crear en API', err);
+            }
+        })();
     };
 
     const claseVista = [

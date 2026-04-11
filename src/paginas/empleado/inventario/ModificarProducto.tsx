@@ -121,6 +121,7 @@ function ModificarProducto({ productoInicial, onGuardar, onCancelar }: Modificar
             placeholder="Referencia/codigo"
             value={formularioProducto.referencia}
             onChange={(event) => actualizarCampoFormulario('referencia', event.target.value)}
+            readOnly
           />
           <input
             className="inventarioFormularioInput"
