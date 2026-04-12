@@ -3,6 +3,7 @@ import cors from 'cors';
 import { env } from './shared/env.js';
 import { healthRouter } from './routes/health.js';
 import { authRouter } from './routes/auth.js';
+import { registroRouter } from './routes/registro.js';
 import { productosRouter } from './routes/productos.js';
 import { inventarioRouter } from './routes/inventario.js';
 import { ventasRouter } from './routes/ventas.js';
@@ -31,6 +32,7 @@ export function buildApp() {
 
   app.use('/api/health', healthRouter);
   app.use('/api/auth', authRouter);
+  app.use('/api/auth', registroRouter);
   app.use('/api/productos', productosRouter);
   app.use('/api/inventario', inventarioRouter);
   app.use('/api/ventas', ventasRouter);

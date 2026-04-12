@@ -16,6 +16,8 @@ function RegisterEsc() {
     const navigate = useNavigate();
     const location = useLocation();
     const [animando, setAnimando] = useState(false);
+    const [error, setError] = useState('');
+    const [cargando, setCargando] = useState(false);
     const layoutRef = useRef<HTMLElement | null>(null);
     const visualRef = useRef<HTMLDivElement | null>(null);
     const yaAnimadoRef = useRef(false);
@@ -47,9 +49,63 @@ function RegisterEsc() {
         });
     };
 
-    const registrarYVolverALogin = (event: React.FormEvent) => {
+    const registrarYVolverALogin = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        volverALogin();
+        const form = new FormData(event.currentTarget);
+        const nombre = String(form.get('nombre') ?? '').trim();
+        const apellido = String(form.get('apellido') ?? '').trim();
+        const correo = String(form.get('Email') ?? '').trim();
+        const username = String(form.get('nombre_usuario') ?? '').trim();
+        const password = String(form.get('password') ?? '').trim();
+        const telefono = String(form.get('telefono') ?? '').trim();
+        const dia = String(form.get('dia') ?? '').trim();
+        const mes = String(form.get('mes') ?? '').trim();
+        const anio = String(form.get('anio') ?? '').trim();
+
+        if (!nombre || !apellido || !correo || !username || !password || !telefono) {
+            setError('Completa todos los campos obligatorios.');
+            return;
+        }
+
+        if (!dia || !mes || !anio) {
+            setError('La fecha de nacimiento es obligatoria.');
+            return;
+        }
+
+        const edad = `${anio}-${mes}-${dia}`;
+
+        setError('');
+        setCargando(true);
+
+        try {
+            const respuesta = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    nombre,
+                    apellido,
+                    correo,
+                    username,
+                    password,
+                    edad,
+                    telefono,
+                }),
+            });
+
+            const datos = await respuesta.json();
+            if (!respuesta.ok) {
+                setError(datos?.error || 'No se pudo registrar la cuenta.');
+                return;
+            }
+
+            volverALogin();
+        } catch {
+            setError('Error de conexión con el servidor.');
+        } finally {
+            setCargando(false);
+        }
     };
 
     useLayoutEffect(() => {
@@ -153,24 +209,25 @@ function RegisterEsc() {
                             className="register_input"
                             placeholder="Teléfono"
                             autoComplete="tel"
+                            required
                         />
 
 						<div className='fecha' aria-label="Fecha de nacimiento">
-							<select className="fecha_select fecha_select_dia" name="dia" defaultValue="" aria-label="Día">
+                            <select className="fecha_select fecha_select_dia" name="dia" defaultValue="" aria-label="Día" required>
 								<option value="" disabled>DD</option>
 								{dias.map((dia) => (
 									<option key={dia} value={dia}>{dia}</option>
 								))}
 							</select>
 
-							<select className="fecha_select fecha_select_mes" name="mes" defaultValue="" aria-label="Mes">
+                            <select className="fecha_select fecha_select_mes" name="mes" defaultValue="" aria-label="Mes" required>
 								<option value="" disabled>MM</option>
 								{meses.map((mes) => (
 									<option key={mes} value={mes}>{mes}</option>
 								))}
 							</select>
 
-							<select className="fecha_select fecha_select_anio" name="anio" defaultValue="" aria-label="Año">
+                            <select className="fecha_select fecha_select_anio" name="anio" defaultValue="" aria-label="Año" required>
 								<option value="" disabled>YYYY</option>
 								{years.map((year) => (
 									<option key={year} value={year}>{year}</option>
@@ -184,13 +241,15 @@ function RegisterEsc() {
                         </label>
 
                         <div className="register_actions" role="group" aria-label="Acciones de registro">
-                            <button type="submit" className="register_button register_button_primary">
-                                Registrarse
+                            <button type="submit" className="register_button register_button_primary" disabled={cargando}>
+                                {cargando ? 'Creando cuenta...' : 'Registrarse'}
                             </button>
                             <button type="button" className="register_button register_button_secondary" onClick={volverALogin} disabled={animando}>
                                 Volver
                             </button>
                         </div>
+
+                        {error ? <p className="register_error">{error}</p> : null}
                     </form>
 				</div>
 
