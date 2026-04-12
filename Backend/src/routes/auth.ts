@@ -67,7 +67,7 @@ authRouter.post('/login', async (req, res, next) => {
 
 
     if (!result.ok) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
+      return res.status(401).json({});
     }
 
     const token = jwt.sign(
