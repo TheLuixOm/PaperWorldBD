@@ -13,29 +13,18 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
 
-  const calcularEdadDesdeFecha = (fechaNacimiento: Date) => {
-    const hoy = new Date();
-    let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
-    const mesDiff = hoy.getMonth() - fechaNacimiento.getMonth();
-
-    if (mesDiff < 0 || (mesDiff === 0 && hoy.getDate() < fechaNacimiento.getDate())) {
-      edad -= 1;
-    }
-
-    return edad;
-  };
-
   const registrarCuenta = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const nombre = String(form.get('nombre') ?? '').trim();
     const apellido = String(form.get('apellido') ?? '').trim();
+    const telefono = String(form.get('telefono') ?? '').trim();
     const correo = String(form.get('correo') ?? '').trim();
     const username = String(form.get('username') ?? '').trim();
     const password = String(form.get('password') ?? '').trim();
     const fecha = String(form.get('fecha_nacimiento') ?? '').trim();
 
-    if (!nombre || !apellido || !correo || !username || !password) {
+    if (!nombre || !apellido || !telefono || !correo || !username || !password) {
       setError('Completa todos los campos obligatorios.');
       return;
     }
@@ -43,14 +32,6 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
     if (!fecha) {
       setError('La fecha de nacimiento es obligatoria.');
       return;
-    }
-
-    let edad: number | undefined;
-    if (fecha) {
-      const fechaNacimiento = new Date(fecha);
-      if (!Number.isNaN(fechaNacimiento.getTime())) {
-        edad = calcularEdadDesdeFecha(fechaNacimiento);
-      }
     }
 
     setError('');
@@ -65,10 +46,11 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
         body: JSON.stringify({
           nombre,
           apellido,
+          telefono,
           correo,
           username,
           password,
-          edad,
+          edad: fecha,
         }),
       });
 
@@ -115,7 +97,7 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
 
           <input className="registro-mov-campo" name="nombre" type="text" placeholder="Nombre" autoComplete="given-name" required />
           <input className="registro-mov-campo" name="apellido" type="text" placeholder="Apellido" autoComplete="family-name" required />
-          <input className="registro-mov-campo" name="telefono" type="tel" placeholder="Telefono" autoComplete="tel" />
+          <input className="registro-mov-campo" name="telefono" type="tel" placeholder="Telefono" autoComplete="tel" required />
           <input className="registro-mov-campo" name="correo" type="email" placeholder="Correo" autoComplete="email" required />
           <input className="registro-mov-campo" name="username" type="text" placeholder="Usuario" autoComplete="username" required />
           <input className="registro-mov-campo" name="password" type="password" placeholder="Contraseña" autoComplete="new-password" required />

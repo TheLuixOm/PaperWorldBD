@@ -49,18 +49,6 @@ function RegisterEsc() {
         });
     };
 
-    const calcularEdadDesdeFecha = (fechaNacimiento: Date) => {
-        const hoy = new Date();
-        let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
-        const mesDiff = hoy.getMonth() - fechaNacimiento.getMonth();
-
-        if (mesDiff < 0 || (mesDiff === 0 && hoy.getDate() < fechaNacimiento.getDate())) {
-            edad -= 1;
-        }
-
-        return edad;
-    };
-
     const registrarYVolverALogin = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
@@ -69,11 +57,12 @@ function RegisterEsc() {
         const correo = String(form.get('Email') ?? '').trim();
         const username = String(form.get('nombre_usuario') ?? '').trim();
         const password = String(form.get('password') ?? '').trim();
+        const telefono = String(form.get('telefono') ?? '').trim();
         const dia = String(form.get('dia') ?? '').trim();
         const mes = String(form.get('mes') ?? '').trim();
         const anio = String(form.get('anio') ?? '').trim();
 
-        if (!nombre || !apellido || !correo || !username || !password) {
+        if (!nombre || !apellido || !correo || !username || !password || !telefono) {
             setError('Completa todos los campos obligatorios.');
             return;
         }
@@ -83,13 +72,7 @@ function RegisterEsc() {
             return;
         }
 
-        let edad: number | undefined;
-        if (dia && mes && anio) {
-            const fecha = new Date(Number(anio), Number(mes) - 1, Number(dia));
-            if (!Number.isNaN(fecha.getTime())) {
-                edad = calcularEdadDesdeFecha(fecha);
-            }
-        }
+        const edad = `${anio}-${mes}-${dia}`;
 
         setError('');
         setCargando(true);
@@ -107,6 +90,7 @@ function RegisterEsc() {
                     username,
                     password,
                     edad,
+                    telefono,
                 }),
             });
 
@@ -225,6 +209,7 @@ function RegisterEsc() {
                             className="register_input"
                             placeholder="Teléfono"
                             autoComplete="tel"
+                            required
                         />
 
 						<div className='fecha' aria-label="Fecha de nacimiento">

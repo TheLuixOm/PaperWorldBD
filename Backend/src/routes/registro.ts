@@ -9,25 +9,27 @@ type RegisterBody = {
 	apellido: string;
 	correo: string;
     username: string;
-	edad?: number;
+    edad?: string;
 	password: string;
+	telefono?: string;
 };
 
 registroRouter.post('/register', async (req, res, next) => {
     try {
         const body = req.body as Partial<RegisterBody>;
 
-        if (!body.nombre || !body.apellido || !body.correo || !body.username || !body.password) {
+        if (!body.nombre || !body.apellido || !body.correo || !body.username || !body.password || !body.telefono || !body.edad) {
             return res.status(400).json({ error: 'BadRequest', detail: 'Faltan campos requeridos' });
         }
 
         const correo = body.correo.trim().toLowerCase();
         const username = body.username.trim();
+        const telefono = body.telefono.trim();
+        const edad = body.edad.trim();
         const passwordHash = await bcrypt.hash(body.password, 10);
-        const edad = typeof body.edad === 'number' && Number.isFinite(body.edad) ? Math.max(0, Math.floor(body.edad)) : null;
 
-        if (edad === null) {
-            return res.status(400).json({ error: 'BadRequest', detail: 'La fecha de nacimiento es obligatoria.' });
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(edad)) {
+            return res.status(400).json({ error: 'BadRequest', detail: 'La edad (fecha) es obligatoria.' });
         }
 
         const created = await withTransaction(async (client) => {
@@ -43,8 +45,8 @@ registroRouter.post('/register', async (req, res, next) => {
             }
 
             const insertedUser = await client.query<{ id_usuario: number }>(
-                'insert into usuario (nombre, apellido, correo, edad) values ($1, $2, $3, $4) returning id_usuario',
-                [body.nombre, body.apellido, correo, edad],
+                'insert into usuario (nombre, apellido, correo, telefono, edad) values ($1, $2, $3, $4, $5) returning id_usuario',
+                [body.nombre, body.apellido, correo, telefono, edad],
             );
             const userId = insertedUser.rows[0]!.id_usuario;
 
