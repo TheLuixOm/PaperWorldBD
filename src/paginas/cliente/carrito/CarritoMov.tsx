@@ -1,17 +1,20 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, ShoppingCart, Trash2 } from 'lucide-react';
 import UsuarioMenu from '../../empleado/Barras/UsuarioMenu';
 import MenuLateralMovil from '../componentes/MenuLateralMovil';
 import FooterCliente from '../componentes/FooterCliente';
 import clipAzul from '../../../images/Clip_azul.svg';
 import { useCart } from './CarritoContext';
+import { procesarPedido } from '../../../api/pedidos';
 import '../inicio/InicioClienteMov.css';
 import './CarritoMov.css';
 
 function CarritoMov() {
+  const navigate = useNavigate();
   const [menuAbierto, setMenuAbierto] = useState(false);
-  const { items, totalItems, totalPrice, removeItem, setQuantity } = useCart();
+  const { items, totalItems, totalPrice, removeItem, setQuantity, clear } = useCart();
+  const [procesando, setProcesando] = useState(false);
 
   const total = useMemo(() => totalPrice, [totalPrice]);
 
@@ -21,6 +24,29 @@ function CarritoMov() {
       return;
     }
     setQuantity(id, actual.cantidad + delta);
+  };
+
+  const comprar = async () => {
+    if (procesando || items.length === 0) {
+      return;
+    }
+
+    setProcesando(true);
+    try {
+      const usuarioId = localStorage.getItem('paperworldUsuario') ?? '';
+      await procesarPedido({
+        usuarioId,
+        items: items.map((it) => ({ id: it.id, cantidad: it.cantidad })),
+      });
+
+      clear();
+      window.alert('Pedido enviado');
+      navigate('/cliente/inicio', { replace: true });
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'No se pudo procesar el pedido');
+    } finally {
+      setProcesando(false);
+    }
   };
 
   return (
@@ -150,8 +176,8 @@ function CarritoMov() {
 
           <div className="carritoMovLinea" aria-hidden="true" />
 
-          <button type="button" className="carritoMovComprar">
-            Comprar
+          <button type="button" className="carritoMovComprar" onClick={comprar} disabled={procesando || items.length === 0}>
+            {procesando ? 'Procesando...' : 'Comprar'}
           </button>
         </section>
 

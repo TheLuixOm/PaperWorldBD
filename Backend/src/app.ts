@@ -7,6 +7,7 @@ import { registroRouter } from './routes/registro.js';
 import { productosRouter } from './routes/productos.js';
 import { inventarioRouter } from './routes/inventario.js';
 import { ventasRouter } from './routes/ventas.js';
+import { pedidosRouter } from './routes/pedidos.js';
 import { reportesRouter } from './routes/reportes.js';
 
 export function buildApp() {
@@ -36,6 +37,7 @@ export function buildApp() {
   app.use('/api/productos', productosRouter);
   app.use('/api/inventario', inventarioRouter);
   app.use('/api/ventas', ventasRouter);
+  app.use('/api/pedidos', pedidosRouter);
   app.use('/api/reportes', reportesRouter);
 
   // 404

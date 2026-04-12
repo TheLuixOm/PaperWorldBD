@@ -50,6 +50,7 @@ function LoginMov({ onIrRegistro }: LoginMovProps) {
       localStorage.setItem('paperworldToken', datos.token);
 
       const roles: string[] = Array.isArray(datos?.user?.roles) ? datos.user.roles : [];
+      localStorage.setItem('paperworldRoles', JSON.stringify(roles));
       if (roles.includes('cliente')) {
         navigate('/cliente/inicio');
         return;

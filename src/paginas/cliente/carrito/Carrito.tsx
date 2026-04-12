@@ -1,15 +1,18 @@
-import { useMemo } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { BookOpen, Home, Search, ShoppingCart } from 'lucide-react';
 import UsuarioMenu from '../../empleado/Barras/UsuarioMenu';
 import clipAzul from '../../../images/Clip_azul.svg';
 import { useCart } from './CarritoContext';
+import { procesarPedido } from '../../../api/pedidos';
 import FooterCliente from '../componentes/FooterCliente';
 import '../inicio/InicioCliente.css';
 import './CarritoCliente.css';
 
 function Carrito() {
-  const { items, totalItems, totalPrice, removeItem, setQuantity } = useCart();
+  const navigate = useNavigate();
+  const { items, totalItems, totalPrice, removeItem, setQuantity, clear } = useCart();
+  const [procesando, setProcesando] = useState(false);
 
   const actualizarCantidad = (id: string, delta: number) => {
     const actual = items.find((x) => x.id === id);
@@ -20,6 +23,29 @@ function Carrito() {
   };
 
   const total = useMemo(() => totalPrice, [totalPrice]);
+
+  const comprar = async () => {
+    if (procesando || items.length === 0) {
+      return;
+    }
+
+    setProcesando(true);
+    try {
+      const usuarioId = localStorage.getItem('paperworldUsuario') ?? '';
+      await procesarPedido({
+        usuarioId,
+        items: items.map((it) => ({ id: it.id, cantidad: it.cantidad })),
+      });
+
+      clear();
+      window.alert('Pedido enviado');
+      navigate('/cliente/inicio', { replace: true });
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'No se pudo procesar el pedido');
+    } finally {
+      setProcesando(false);
+    }
+  };
 
   return (
     <div className="inicioCliente carritoCliente" id="carrito-cliente">
@@ -163,8 +189,8 @@ function Carrito() {
         <div className="carritoClienteResumen" aria-label="Resumen">
           <p className="carritoClienteResumenLabel">Total</p>
           <p className="carritoClienteResumenValor">USD {total.toFixed(2)}</p>
-          <button type="button" className="carritoClienteComprar">
-            Comprar
+          <button type="button" className="carritoClienteComprar" onClick={comprar} disabled={procesando || items.length === 0}>
+            {procesando ? 'Procesando...' : 'Comprar'}
           </button>
         </div>
       </main>

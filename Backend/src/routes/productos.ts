@@ -46,7 +46,17 @@ productosRouter.get('/', async (req, res, next) => {
         coalesce(p.cantidad, 0) as cantidad,
         coalesce(p.imagen, '') as imagen,
         coalesce(v.vendidos, 0) as vendidos
-      from producto p
+      from (
+        select distinct on (p0.id_producto)
+          p0.id_producto,
+          p0.inventario_id_actualizacion,
+          p0.nombreproducto,
+          p0.precio,
+          p0.cantidad,
+          p0.imagen
+        from producto p0
+        order by p0.id_producto asc, p0.inventario_id_actualizacion desc
+      ) p
       left join detalle_cat dc
         on dc.producto_id_producto = p.id_producto
        and dc.producto_id_actualizacion = p.inventario_id_actualizacion

@@ -2,55 +2,17 @@ import { Router } from 'express';
 import type { PoolClient } from 'pg';
 import { withTransaction } from '../db/query.js';
 
-export const ventasRouter = Router();
+export const pedidosRouter = Router();
 
-type VentaItemInput = {
+type PedidoItemInput = {
   id: unknown;
   cantidad: unknown;
 };
 
-type VentaBody = {
+type PedidoBody = {
   usuarioId?: unknown;
   items?: unknown;
 };
-
-function parseBigintLike(input: unknown): bigint | null {
-  if (typeof input === 'number' && Number.isFinite(input)) {
-    return BigInt(Math.trunc(input));
-  }
-
-  if (typeof input !== 'string') {
-    return null;
-  }
-
-  const trimmed = input.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  const digits = trimmed.replace(/[^0-9-]/g, '');
-  if (!digits) {
-    return null;
-  }
-
-  try {
-    return BigInt(digits);
-  } catch {
-    return null;
-  }
-}
-
-function parseIntSafe(input: unknown, fallback: number) {
-  const n = typeof input === 'number' ? input : typeof input === 'string' ? Number(input) : NaN;
-  return Number.isFinite(n) ? Math.trunc(n) : fallback;
-}
-
-function toFechaDDMMYYYY(input: Date) {
-  const dd = String(input.getDate()).padStart(2, '0');
-  const mm = String(input.getMonth() + 1).padStart(2, '0');
-  const yyyy = String(input.getFullYear());
-  return `${dd}/${mm}/${yyyy}`;
-}
 
 async function resolveUsuarioId(client: PoolClient, usuarioKey: string): Promise<bigint> {
   const clean = (usuarioKey ?? '').trim();
@@ -94,7 +56,7 @@ async function resolveUsuarioId(client: PoolClient, usuarioKey: string): Promise
       return BigInt(found.rows[0].usuario_id_usuario);
     }
 
-    // Fallback seguro (no insertamos en credenciales porque puede requerir clave/constraints).
+    // Fallback seguro: intenta por correo (si alguien guardó username como correo) y si no, crea usuario.
     const byCorreo = await client.query<{ id_usuario: string }>(
       'select id_usuario::text as id_usuario from usuario where lower(correo) = lower($1) limit 1',
       [clean],
@@ -118,11 +80,50 @@ async function resolveUsuarioId(client: PoolClient, usuarioKey: string): Promise
   return BigInt(insertedUser.rows[0]!.id_usuario);
 }
 
-ventasRouter.post('/', async (req, res, next) => {
-  try {
-    const body = (req.body ?? {}) as VentaBody;
+function parseBigintLike(input: unknown): bigint | null {
+  if (typeof input === 'number' && Number.isFinite(input)) {
+    return BigInt(Math.trunc(input));
+  }
 
-    const usuarioId = typeof body.usuarioId === 'string' && body.usuarioId.trim() ? body.usuarioId.trim() : 'mostrador';
+  if (typeof input !== 'string') {
+    return null;
+  }
+
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  // Soporta formatos tipo "#0001"
+  const digits = trimmed.replace(/[^0-9-]/g, '');
+  if (!digits) {
+    return null;
+  }
+
+  try {
+    return BigInt(digits);
+  } catch {
+    return null;
+  }
+}
+
+function parseIntSafe(input: unknown, fallback: number) {
+  const n = typeof input === 'number' ? input : typeof input === 'string' ? Number(input) : NaN;
+  return Number.isFinite(n) ? Math.trunc(n) : fallback;
+}
+
+function toFechaDDMMYYYY(input: Date) {
+  const dd = String(input.getDate()).padStart(2, '0');
+  const mm = String(input.getMonth() + 1).padStart(2, '0');
+  const yyyy = String(input.getFullYear());
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+pedidosRouter.post('/', async (req, res, next) => {
+  try {
+    const body = (req.body ?? {}) as PedidoBody;
+
+    const usuarioId = typeof body.usuarioId === 'string' && body.usuarioId.trim() ? body.usuarioId.trim() : 'cliente';
     const itemsRaw = body.items;
     if (!Array.isArray(itemsRaw) || itemsRaw.length === 0) {
       return res.status(400).json({ error: 'BadRequest', detail: 'items requeridos' });
@@ -130,7 +131,7 @@ ventasRouter.post('/', async (req, res, next) => {
 
     const items: Array<{ idProducto: bigint; cantidad: number }> = [];
     for (const it of itemsRaw as unknown[]) {
-      const obj = it as Partial<VentaItemInput>;
+      const obj = it as Partial<PedidoItemInput>;
       const idProducto = parseBigintLike(obj?.id);
       const cantidad = Math.max(1, parseIntSafe(obj?.cantidad, 0));
       if (!idProducto) {
@@ -143,9 +144,8 @@ ventasRouter.post('/', async (req, res, next) => {
     }
 
     const result = await withTransaction(async (client) => {
-      const idUsuario = await resolveUsuarioId(client, usuarioId);
+      const usuarioIdUsuario = await resolveUsuarioId(client, usuarioId);
 
-      // Trae y bloquea stock/precio de cada producto (última versión) y valida.
       const fetched: Array<{
         id_producto: bigint;
         inventario_id_actualizacion: bigint;
@@ -200,26 +200,24 @@ ventasRouter.post('/', async (req, res, next) => {
         return acc + (f ? f.precio * it.cantidad : 0);
       }, 0);
 
-      const ordenInsert = await client.query<{ id_orden: string; fecha: string }>(
+      const ordenInsert = await client.query<{ id_orden: string }>(
         `insert into orden (fecha, total, estado, usuario_id_usuario)
          values (now(), $1, $2, $3)
-         returning id_orden::text as id_orden, fecha::text as fecha`,
-        [total, 'Procesado', idUsuario.toString()],
+         returning id_orden::text as id_orden`,
+        [total, 'Pendiente', usuarioIdUsuario.toString()],
       );
 
       const idOrden = BigInt(ordenInsert.rows[0]!.id_orden);
 
-      // Inserta items + descuenta stock.
       for (const it of items) {
         const f = fetched.find((x) => x.id_producto === it.idProducto)!;
 
-        const upd = await client.query<{ cantidad: number }>(
+        const upd = await client.query(
           `update producto
              set cantidad = cantidad - $3
            where id_producto = $1
              and inventario_id_actualizacion = $2
-             and cantidad >= $3
-           returning cantidad`,
+             and cantidad >= $3`,
           [f.id_producto.toString(), f.inventario_id_actualizacion.toString(), it.cantidad],
         );
 
@@ -234,30 +232,22 @@ ventasRouter.post('/', async (req, res, next) => {
         );
       }
 
-      // Factura y reporte (opcionales pero útiles para el módulo de reportes).
-      const factura = await client.query<{ id_factura: string }>(
-        `insert into facturas (usuario_id_usuario, fecha_compra, total, orden_id_orden)
-         values ($1, now(), $2, $3)
-         returning id_factura::text as id_factura`,
-        [idUsuario.toString(), total, idOrden.toString()],
-      );
-
       await client.query(
-        `insert into reportes (fecha, tipo, orden_id_orden)
-         values (now(), $1, $2)`,
-        ['venta', idOrden.toString()],
+        `insert into facturas (usuario_id_usuario, fecha_compra, total, orden_id_orden)
+         values ($1, now(), $2, $3)`,
+        [usuarioIdUsuario.toString(), total, idOrden.toString()],
       );
 
       const fecha = new Date();
 
       return {
-        venta: {
-          id: `V-${idOrden.toString()}`,
+        pedido: {
+          id: `P-${idOrden.toString()}`,
           fecha: toFechaDDMMYYYY(fecha),
-          cliente: idUsuario.toString(),
+          cliente: usuarioId,
           items: items.reduce((acc, it) => acc + it.cantidad, 0),
           total,
-          estado: 'Procesado' as const,
+          estado: 'Pendiente' as const,
         },
         id_orden: idOrden.toString(),
       };

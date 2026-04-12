@@ -7,8 +7,23 @@ export type ReporteVentaItem = {
   estado: 'Procesado' | 'Reembolsado';
 };
 
+export type ReportePedidoItem = {
+  id: string;
+  fecha: string;
+  cliente: string;
+  items: number;
+  total: number;
+  estado: 'Pendiente' | 'En preparación' | 'Listo';
+};
+
 type ReporteVentasResponse = {
   items: ReporteVentaItem[];
+  limit: number;
+  offset: number;
+};
+
+type ReportePedidosResponse = {
+  items: ReportePedidoItem[];
   limit: number;
   offset: number;
 };
@@ -47,4 +62,22 @@ export async function listarReporteVentas(params?: { limit?: number; offset?: nu
 
   const url = `/api/reportes/ventas${qs.size ? `?${qs.toString()}` : ''}`;
   return apiFetch<ReporteVentasResponse>(url);
+}
+
+export async function listarReportePedidos(params?: { limit?: number; offset?: number }) {
+  const qs = new URLSearchParams();
+  if (typeof params?.limit === 'number') qs.set('limit', String(params.limit));
+  if (typeof params?.offset === 'number') qs.set('offset', String(params.offset));
+
+  const url = `/api/reportes/pedidos${qs.size ? `?${qs.toString()}` : ''}`;
+  return apiFetch<ReportePedidosResponse>(url);
+}
+
+export async function finalizarPedido(idPedido: string) {
+  const cleaned = (idPedido ?? '').toString();
+  const digits = cleaned.replace(/[^0-9-]/g, '');
+  const id = digits || cleaned;
+  return apiFetch<{ ok: true; id: string }>(`/api/reportes/pedidos/${id}/finalizar`, {
+    method: 'POST',
+  });
 }

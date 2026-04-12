@@ -3,7 +3,7 @@ import { Search } from 'lucide-react';
 import '../inventario/Inventario.css';
 import './Reportes.css';
 import UsuarioMenu from '../Barras/UsuarioMenu';
-import { listarReporteVentas, type ReporteVentaItem } from '../../../api/reportes';
+import { finalizarPedido, listarReportePedidos, listarReporteVentas, type ReportePedidoItem, type ReporteVentaItem } from '../../../api/reportes';
 
 type ReporteTab = 'ventas' | 'pedidos' | 'inventario';
 
@@ -92,6 +92,11 @@ function Reportes() {
   const [cargandoVentas, setCargandoVentas] = useState(true);
   const [errorVentas, setErrorVentas] = useState<string | null>(null);
 
+  const [pedidos, setPedidos] = useState<RegistroPedido[]>([]);
+  const [cargandoPedidos, setCargandoPedidos] = useState(true);
+  const [errorPedidos, setErrorPedidos] = useState<string | null>(null);
+  const [finalizandoPedidoId, setFinalizandoPedidoId] = useState<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -134,14 +139,89 @@ function Reportes() {
     };
   }, []);
 
-  const pedidos: RegistroPedido[] = useMemo(
-    () => [
-      { id: 'P-7741', fecha: '07/04/2026', cliente: 'Jose Alvarez', items: 4, total: 48.1, estado: 'Pendiente' },
-      { id: 'P-7740', fecha: '07/04/2026', cliente: 'Sofia Mendez', items: 7, total: 89.35, estado: 'Pendiente' },
-      { id: 'P-7739', fecha: '06/04/2026', cliente: 'Camila Torres', items: 2, total: 16.9, estado: 'Pendiente' },
-    ],
-    [],
-  );
+  useEffect(() => {
+    let cancelled = false;
+
+    const cargarPedidos = async () => {
+      try {
+        setCargandoPedidos(true);
+        setErrorPedidos(null);
+        const res = await listarReportePedidos({ limit: 200, offset: 0 });
+        if (cancelled) {
+          return;
+        }
+
+        const normalizados = res.items.map((p: ReportePedidoItem) => ({
+          id: p.id,
+          fecha: p.fecha,
+          cliente: p.cliente,
+          items: Number.isFinite(p.items) ? p.items : 0,
+          total: Number.isFinite(p.total) ? p.total : 0,
+          estado: (p.estado === 'En preparación' ? 'En preparación' : p.estado === 'Listo' ? 'Listo' : 'Pendiente') as
+            | 'Pendiente'
+            | 'En preparación'
+            | 'Listo',
+        }));
+
+        setPedidos(normalizados);
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+        setErrorPedidos(err instanceof Error ? err.message : 'No se pudieron cargar los pedidos');
+        setPedidos([]);
+      } finally {
+        if (!cancelled) {
+          setCargandoPedidos(false);
+        }
+      }
+    };
+
+    void cargarPedidos();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const onFinalizarPedido = async (id: string) => {
+    if (finalizandoPedidoId) {
+      return;
+    }
+
+    setFinalizandoPedidoId(id);
+    try {
+      await finalizarPedido(id);
+      setPedidos((prev) => prev.filter((p) => p.id !== id));
+
+      try {
+        setCargandoVentas(true);
+        setErrorVentas(null);
+        const resVentas = await listarReporteVentas({ limit: 200, offset: 0 });
+
+        const normalizadas = resVentas.items.map((v: ReporteVentaItem) => ({
+          id: v.id,
+          fecha: v.fecha,
+          cliente: v.cliente,
+          items: Number.isFinite(v.items) ? v.items : 0,
+          total: Number.isFinite(v.total) ? v.total : 0,
+          estado: (v.estado === 'Reembolsado' ? 'Reembolsado' : 'Procesado') as 'Procesado' | 'Reembolsado',
+        }));
+
+        setVentas(normalizadas);
+      } catch (err) {
+        setErrorVentas(err instanceof Error ? err.message : 'No se pudieron cargar las ventas');
+      } finally {
+        setCargandoVentas(false);
+      }
+
+      setTab('ventas');
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'No se pudo finalizar el pedido');
+    } finally {
+      setFinalizandoPedidoId(null);
+    }
+  };
 
   const inventario: RegistroInventario[] = useMemo(
     () => [
@@ -329,6 +409,8 @@ function Reportes() {
             </div>
 
             <div className="inventarioTablaContenedor reportesTabla" role="region" aria-label="Tabla de pedidos">
+              {cargandoPedidos && <p>Cargando pedidos...</p>}
+              {errorPedidos && <p>Error al cargar pedidos: {errorPedidos}</p>}
               <table className="inventarioTabla">
                 <thead>
                   <tr>
@@ -357,7 +439,12 @@ function Reportes() {
                         </span>
                       </td>
                       <td className="reportesCeldaAccion">
-                        <button type="button" className="reportesAccion">
+                        <button
+                          type="button"
+                          className="reportesAccion"
+                          onClick={() => onFinalizarPedido(p.id)}
+                          disabled={finalizandoPedidoId === p.id}
+                        >
                           Finalizar
                         </button>
                       </td>
@@ -379,7 +466,12 @@ function Reportes() {
                   <p className="reportesCardMeta">{p.fecha} · {p.items} items</p>
                   <p className="reportesCardLinea"><span>Cliente:</span> {p.cliente}</p>
                   <p className="reportesCardLinea"><span>Total:</span> {formatearDinero(p.total)}</p>
-                  <button type="button" className="reportesAccion reportesAccionMovil">
+                  <button
+                    type="button"
+                    className="reportesAccion reportesAccionMovil"
+                    onClick={() => onFinalizarPedido(p.id)}
+                    disabled={finalizandoPedidoId === p.id}
+                  >
                     Finalizar
                   </button>
                 </article>

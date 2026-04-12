@@ -68,6 +68,8 @@ function UsuarioMenu({ className = '', ariaLabel = 'Perfil del usuario' }: Usuar
 
   const cerrarSesion = () => {
     localStorage.removeItem('paperworldUsuario');
+    localStorage.removeItem('paperworldToken');
+    localStorage.removeItem('paperworldRoles');
     cerrarPanel();
     navigate('/login');
   };
