@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { BookOpen, ChevronLeft, ChevronRight, Home, Search, ShoppingCart } from 'lucide-react';
 import UsuarioMenu from '../../empleado/Barras/UsuarioMenu';
-import { productosIniciales } from '../../empleado/datosInventario';
 import { useCart } from '../carrito/CarritoContext';
+import { listarProductos, type ProductoApiItem } from '../../../api/productos';
 import ProductoExpandidoPc, { type ProductoExpandidoPcData } from '../componentes/ProductoExpandidoPc';
 import FooterCliente from '../componentes/FooterCliente';
 import clipAzul from '../../../images/Clip_azul.svg';
@@ -21,10 +21,21 @@ type ProductoCatalogo = {
 
 type OrdenCatalogo = 'relevancia' | 'precio_desc' | 'precio_asc' | 'nombre_asc' | 'nombre_desc';
 
-function parsearPrecio(precio: string) {
-  const limpio = precio.replace(/[^0-9,.-]/g, '').replace(/,/g, '');
-  const numero = Number(limpio);
-  return Number.isFinite(numero) ? numero : 0;
+function imagenPorDefecto(idProducto: string) {
+  const digits = (idProducto ?? '').replace(/[^0-9]/g, '');
+  const seed = digits || 'producto';
+  return `https://picsum.photos/seed/${seed}/120/80`;
+}
+
+function normalizarProductoApi(p: ProductoApiItem): ProductoCatalogo {
+  return {
+    id: p.id,
+    nombre: p.nombre ?? '',
+    categoria: p.categoria ?? '',
+    precio: Number.isFinite(p.precio) ? p.precio : 0,
+    imagen: p.imagen || imagenPorDefecto(p.id),
+    cantidad: Number.isFinite(p.cantidad) ? p.cantidad : 0,
+  };
 }
 
 function normalizarTexto(texto: string) {
@@ -119,19 +130,43 @@ function CatalogoCliente() {
   const [orden, setOrden] = useState<OrdenCatalogo>('relevancia');
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<Set<string>>(() => new Set());
   const [paginaActual, setPaginaActual] = useState(1);
+  const [productosCatalogo, setProductosCatalogo] = useState<ProductoCatalogo[]>([]);
+  const [cargandoProductos, setCargandoProductos] = useState(true);
+  const [errorProductos, setErrorProductos] = useState<string | null>(null);
   const buscadorRef = useRef<HTMLElement | null>(null);
   const inputBusquedaRef = useRef<HTMLInputElement | null>(null);
   const productosPorPagina = 24;
 
-  const productosCatalogo = useMemo<ProductoCatalogo[]>(() => {
-    return productosIniciales.map((p) => ({
-      id: p.id,
-      nombre: p.nombre,
-      categoria: p.categoria,
-      precio: parsearPrecio(p.precio),
-      imagen: p.imagen,
-      cantidad: p.cantidad,
-    }));
+  useEffect(() => {
+    let cancelled = false;
+
+    const cargar = async () => {
+      try {
+        setCargandoProductos(true);
+        setErrorProductos(null);
+        const res = await listarProductos({ limit: 500, offset: 0 });
+        if (cancelled) {
+          return;
+        }
+        setProductosCatalogo(res.items.map(normalizarProductoApi));
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+        setErrorProductos(err instanceof Error ? err.message : 'No se pudo cargar el catalogo');
+        setProductosCatalogo([]);
+      } finally {
+        if (!cancelled) {
+          setCargandoProductos(false);
+        }
+      }
+    };
+
+    void cargar();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const categorias = useMemo(() => {
@@ -506,6 +541,9 @@ function CatalogoCliente() {
           </aside>
 
           <section className="catalogoClienteResultados" aria-label="Resultados">
+            {cargandoProductos && <p>Cargando productos...</p>}
+            {errorProductos && <p>Error al cargar productos: {errorProductos}</p>}
+            {!cargandoProductos && !errorProductos && productosFiltrados.length === 0 && <p>No hay productos.</p>}
             <div className="catalogoClienteGrid" role="list">
               {productosVisibles.map((producto) => (
                 <article key={producto.id} className="catalogoClienteProducto" role="listitem">
