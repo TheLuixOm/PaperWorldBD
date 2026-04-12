@@ -1,24 +1,90 @@
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../inventario/Inventario.css';
 import './Ventas_mov.css';
-import { productosIniciales, type Producto } from '../datosInventario';
 import UsuarioMenu from '../Barras/UsuarioMenu';
+import { listarProductos, type ProductoApiItem } from '../../../api/productos';
+import { procesarVenta } from '../../../api/ventas';
+
+type ProductoVenta = {
+    id: string;
+    nombre: string;
+    categoria: string;
+    precio: number;
+    cantidad: number;
+    vendidos: number;
+    imagen: string;
+};
 
 type ItemVenta = {
-    producto: Producto;
+    producto: ProductoVenta;
     cantidad: number;
 };
 
+function imagenPorDefecto(idProducto: string) {
+    const digits = (idProducto ?? '').replace(/[^0-9]/g, '');
+    const seed = digits || 'producto';
+    return `https://picsum.photos/seed/${seed}/120/80`;
+}
+
+function normalizarProductoApi(p: ProductoApiItem): ProductoVenta {
+    return {
+        id: p.id,
+        nombre: p.nombre ?? '',
+        categoria: p.categoria ?? '',
+        precio: Number.isFinite(p.precio) ? p.precio : 0,
+        cantidad: Number.isFinite(p.cantidad) ? p.cantidad : 0,
+        vendidos: Number.isFinite(p.vendidos) ? p.vendidos : 0,
+        imagen: p.imagen || imagenPorDefecto(p.id),
+    };
+}
+
 
 function Ventas_mov() {
-    const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
+    const navigate = useNavigate();
+    const [productoSeleccionado, setProductoSeleccionado] = useState<ProductoVenta | null>(null);
     const [itemsVenta, setItemsVenta] = useState<ItemVenta[]>([]);
     const [indiceActivo, setIndiceActivo] = useState(0);
     const [textoBusqueda, setTextoBusqueda] = useState('');
     const [sugerenciasAbiertas, setSugerenciasAbiertas] = useState(false);
-    const productos = productosIniciales;
+    const [productos, setProductos] = useState<ProductoVenta[]>([]);
+    const [cargandoProductos, setCargandoProductos] = useState(true);
+    const [errorProductos, setErrorProductos] = useState<string | null>(null);
+    const [procesando, setProcesando] = useState(false);
     const productosmax_visibles = 7;
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const cargar = async () => {
+            try {
+                setCargandoProductos(true);
+                setErrorProductos(null);
+                const res = await listarProductos({ limit: 500, offset: 0 });
+                if (cancelled) {
+                    return;
+                }
+                setProductos(res.items.map(normalizarProductoApi));
+            } catch (err) {
+                if (cancelled) {
+                    return;
+                }
+                setErrorProductos(err instanceof Error ? err.message : 'No se pudo cargar productos');
+                setProductos([]);
+            } finally {
+                if (!cancelled) {
+                    setCargandoProductos(false);
+                }
+            }
+        };
+
+        void cargar();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
 
     const manejarCambioBusqueda = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,7 +93,7 @@ function Ventas_mov() {
         setSugerenciasAbiertas(e.target.value.trim().length > 0);
         };
 
-    const agregarProductoALista = (producto: Producto) => {
+    const agregarProductoALista = (producto: ProductoVenta) => {
         setItemsVenta((prevItems) => {
             const existente = prevItems.find((item) => item.producto.id === producto.id);
 
@@ -61,7 +127,7 @@ function Ventas_mov() {
         });
     };
 
-    const seleccionarProducto = (producto: Producto) => {
+    const seleccionarProducto = (producto: ProductoVenta) => {
         setProductoSeleccionado({ ...producto });
         setTextoBusqueda(producto.nombre);
         setIndiceActivo(0);
@@ -124,18 +190,38 @@ function Ventas_mov() {
     const mostrarSugerencias =
         sugerenciasAbiertas && textoBusqueda.trim().length > 0 && vista_productos.length > 0;
 
-    const obtenerPrecioNumero = (precioTexto: string) => {
-        const soloDigitos = precioTexto.replace(/[^0-9]/g, '');
-        return Number(soloDigitos || '0');
-    };
-
     const formatearPrecio = (precioNumero: number) => {
         return `$ ${precioNumero.toLocaleString('es-MX')}`;
     };
 
     const totalVenta = itemsVenta.reduce((acumulado, item) => {
-        return acumulado + (obtenerPrecioNumero(item.producto.precio) * item.cantidad);
+        return acumulado + (item.producto.precio * item.cantidad);
     }, 0);
+
+    const enviarVenta = async () => {
+        if (procesando || itemsVenta.length === 0) {
+            return;
+        }
+
+        setProcesando(true);
+        try {
+            const usuarioId = localStorage.getItem('paperworldUsuario') ?? '';
+            await procesarVenta({
+                usuarioId,
+                items: itemsVenta.map((it) => ({ id: it.producto.id, cantidad: it.cantidad })),
+            });
+
+            setItemsVenta([]);
+            setProductoSeleccionado(null);
+            setTextoBusqueda('');
+            window.alert('Venta procesada');
+            navigate('/reportes');
+        } catch (err) {
+            window.alert(err instanceof Error ? err.message : 'No se pudo procesar la venta');
+        } finally {
+            setProcesando(false);
+        }
+    };
 
 
 
@@ -184,7 +270,7 @@ function Ventas_mov() {
                                     <p><strong>Nombre:</strong> {productoSeleccionado.nombre}</p>
                                     <p><strong>ID:</strong> {productoSeleccionado.id}</p>
                                     <p><strong>Categoria:</strong> {productoSeleccionado.categoria}</p>
-                                    <p><strong>Precio:</strong> {productoSeleccionado.precio}</p>
+                                    <p><strong>Precio:</strong> {formatearPrecio(productoSeleccionado.precio)}</p>
                                     <p><strong>Cantidad:</strong> {productoSeleccionado.cantidad}</p>
                                     <p><strong>Vendidos:</strong> {productoSeleccionado.vendidos}</p>
                                     <p><img className="inventarioImagen" src={productoSeleccionado.imagen} alt={productoSeleccionado.nombre} /></p>
@@ -209,8 +295,8 @@ function Ventas_mov() {
                                         </div>
 
                                         <div className="item-venta-preciosMov">
-                                            <span>{item.producto.precio} x {item.cantidad}</span>
-                                            <strong>{formatearPrecio(obtenerPrecioNumero(item.producto.precio) * item.cantidad)}</strong>
+                                            <span>{formatearPrecio(item.producto.precio)} x {item.cantidad}</span>
+                                            <strong>{formatearPrecio(item.producto.precio * item.cantidad)}</strong>
                                         </div>
 
                                         <div className="controles-cantidadMov">
@@ -231,8 +317,8 @@ function Ventas_mov() {
                         <span>Precio total</span>
                         <strong>{formatearPrecio(totalVenta)}</strong>
                     </div>
-                    <button type="button" className="boton-procesarMov" disabled={itemsVenta.length === 0}>
-                        Procesar compra
+                    <button type="button" className="boton-procesarMov" disabled={itemsVenta.length === 0 || procesando || cargandoProductos || !!errorProductos} onClick={enviarVenta}>
+                        {procesando ? 'Procesando...' : 'Procesar compra'}
                     </button>
                 </div>
 

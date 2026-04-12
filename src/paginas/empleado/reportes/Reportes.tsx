@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import '../inventario/Inventario.css';
 import './Reportes.css';
 import UsuarioMenu from '../Barras/UsuarioMenu';
+import { listarReporteVentas, type ReporteVentaItem } from '../../../api/reportes';
 
 type ReporteTab = 'ventas' | 'pedidos' | 'inventario';
 
@@ -87,15 +88,51 @@ function Reportes() {
   const [busquedaPedidos, setBusquedaPedidos] = useState('');
   const [busquedaInventario, setBusquedaInventario] = useState('');
 
-  const ventas: RegistroVenta[] = useMemo(
-    () => [
-      { id: 'V-20341', fecha: '07/04/2026', cliente: 'Maria Perez', items: 5, total: 120.5, estado: 'Procesado' },
-      { id: 'V-20340', fecha: '07/04/2026', cliente: 'Luis Gomez', items: 2, total: 22.0, estado: 'Procesado' },
-      { id: 'V-20339', fecha: '06/04/2026', cliente: 'Ana Silva', items: 1, total: 8.25, estado: 'Procesado' },
-      { id: 'V-20338', fecha: '06/04/2026', cliente: 'Carlos Rivas', items: 3, total: 35.99, estado: 'Procesado' },
-    ],
-    [],
-  );
+  const [ventas, setVentas] = useState<RegistroVenta[]>([]);
+  const [cargandoVentas, setCargandoVentas] = useState(true);
+  const [errorVentas, setErrorVentas] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const cargarVentas = async () => {
+      try {
+        setCargandoVentas(true);
+        setErrorVentas(null);
+        const res = await listarReporteVentas({ limit: 200, offset: 0 });
+        if (cancelled) {
+          return;
+        }
+
+        const normalizadas = res.items.map((v: ReporteVentaItem) => ({
+          id: v.id,
+          fecha: v.fecha,
+          cliente: v.cliente,
+          items: Number.isFinite(v.items) ? v.items : 0,
+          total: Number.isFinite(v.total) ? v.total : 0,
+          estado: (v.estado === 'Reembolsado' ? 'Reembolsado' : 'Procesado') as 'Procesado' | 'Reembolsado',
+        }));
+
+        setVentas(normalizadas);
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+        setErrorVentas(err instanceof Error ? err.message : 'No se pudieron cargar las ventas');
+        setVentas([]);
+      } finally {
+        if (!cancelled) {
+          setCargandoVentas(false);
+        }
+      }
+    };
+
+    void cargarVentas();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const pedidos: RegistroPedido[] = useMemo(
     () => [
@@ -216,6 +253,9 @@ function Reportes() {
                 </div>
               </div>
             </div>
+
+            {cargandoVentas && <p>Cargando ventas...</p>}
+            {errorVentas && <p>Error al cargar ventas: {errorVentas}</p>}
 
             <div className="inventarioTablaContenedor reportesTabla" role="region" aria-label="Tabla de ventas">
               <table className="inventarioTabla">

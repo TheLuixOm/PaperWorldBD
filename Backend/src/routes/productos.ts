@@ -19,7 +19,14 @@ productosRouter.get('/', async (req, res, next) => {
 
     if (q) {
       params.push(`%${q}%`);
-      where.push(`(p.nombreproducto ilike $${params.length} or c.nombrecategoria ilike $${params.length})`);
+      where.push(
+        `(
+          p.nombreproducto ilike $${params.length}
+          or c.nombrecategoria ilike $${params.length}
+          or ('#' || lpad(p.id_producto::text, 4, '0')) ilike $${params.length}
+          or p.id_producto::text ilike $${params.length}
+        )`,
+      );
     }
 
     if (categoria) {
