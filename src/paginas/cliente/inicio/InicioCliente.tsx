@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointer
 import { Link, NavLink } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BookOpen, Eye, Home, Search, ShoppingCart } from 'lucide-react';
 import UsuarioMenu from '../../empleado/Barras/UsuarioMenu';
-import { productosIniciales } from '../../empleado/datosInventario';
 import { useCart } from '../carrito/CarritoContext';
+import { listarProductos, type ProductoApiItem } from '../../../api/productos';
 import ProductoExpandidoPc, { type ProductoExpandidoPcData } from '../componentes/ProductoExpandidoPc';
 import FooterCliente from '../componentes/FooterCliente';
 import clipAzul from '../../../images/Clip_azul.svg';
@@ -19,10 +19,22 @@ type ProductoInicio = {
   cantidad: number;
 };
 
-function parsearPrecio(precio: string) {
-  const limpio = precio.replace(/[^0-9,.-]/g, '').replace(/,/g, '');
-  const numero = Number(limpio);
-  return Number.isFinite(numero) ? numero : 0;
+function imagenPorDefecto(idProducto: string) {
+  const digits = (idProducto ?? '').replace(/[^0-9]/g, '');
+  const seed = digits || 'producto';
+  return `https://picsum.photos/seed/${seed}/120/80`;
+}
+
+function normalizarProductoApi(p: ProductoApiItem): ProductoInicio {
+  return {
+    id: p.id,
+    nombre: p.nombre ?? '',
+    categoria: p.categoria ?? '',
+    precio: Number.isFinite(p.precio) ? p.precio : 0,
+    imagen: p.imagen || imagenPorDefecto(p.id),
+    vendidos: Number.isFinite(p.vendidos) ? p.vendidos : 0,
+    cantidad: Number.isFinite(p.cantidad) ? p.cantidad : 0,
+  };
 }
 
 function normalizarTexto(texto: string) {
@@ -115,6 +127,9 @@ function InicioCliente() {
   const [busquedaInicio, setBusquedaInicio] = useState('');
   const [sugerenciasAbiertas, setSugerenciasAbiertas] = useState(false);
   const [arrastrando, setArrastrando] = useState(false);
+  const [productosInicio, setProductosInicio] = useState<ProductoInicio[]>([]);
+  const [cargandoProductos, setCargandoProductos] = useState(true);
+  const [errorProductos, setErrorProductos] = useState<string | null>(null);
   const carruselRef = useRef<HTMLDivElement | null>(null);
   const buscadorRef = useRef<HTMLFormElement | null>(null);
   const inputBusquedaRef = useRef<HTMLInputElement | null>(null);
@@ -123,16 +138,36 @@ function InicioCliente() {
   );
   const pointerCapturadoRef = useRef(false);
 
-  const productosInicio = useMemo<ProductoInicio[]>(() => {
-    return productosIniciales.map((p) => ({
-      id: p.id,
-      nombre: p.nombre,
-      categoria: p.categoria,
-      precio: parsearPrecio(p.precio),
-      imagen: p.imagen,
-      vendidos: p.vendidos,
-      cantidad: p.cantidad,
-    }));
+  useEffect(() => {
+    let cancelled = false;
+
+    const cargar = async () => {
+      try {
+        setCargandoProductos(true);
+        setErrorProductos(null);
+        const res = await listarProductos({ limit: 500, offset: 0 });
+        if (cancelled) {
+          return;
+        }
+        setProductosInicio(res.items.map(normalizarProductoApi));
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+        setErrorProductos(err instanceof Error ? err.message : 'No se pudo cargar los productos');
+        setProductosInicio([]);
+      } finally {
+        if (!cancelled) {
+          setCargandoProductos(false);
+        }
+      }
+    };
+
+    void cargar();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const productosMasVendidosBase = useMemo(() => {
@@ -435,6 +470,10 @@ function InicioCliente() {
             <span className="inicioClienteEtiqueta">Este mes</span>
             <h3 className="inicioClienteSeccionTitulo">Mas Vendidos</h3>
           </header>
+
+          {cargandoProductos && <p>Cargando productos...</p>}
+          {errorProductos && <p>Error al cargar productos: {errorProductos}</p>}
+          {!cargandoProductos && !errorProductos && productosMasVendidosBase.length === 0 && <p>No hay productos.</p>}
 
           <div className="inicioClienteCarruselHorizontal" aria-label="Carrusel de productos">
             <div className="inicioClienteCarruselControles" aria-label="Controles del carrusel">

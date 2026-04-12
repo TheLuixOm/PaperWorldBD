@@ -17,7 +17,7 @@ export type DatosModificarProducto = DatosFormulario & {
 
 type ModificarProductoProps = {
   productoInicial: Producto;
-  onGuardar: (datos: DatosModificarProducto) => void;
+  onGuardar: (datos: DatosModificarProducto) => Promise<boolean>;
   onCancelar: () => void;
 };
 
@@ -78,12 +78,12 @@ function ModificarProducto({ productoInicial, onGuardar, onCancelar }: Modificar
     setImagenSeleccionada(urlTemporal);
   };
 
-  const guardarCambios = () => {
+  const guardarCambios = async () => {
     if (!formularioProducto.nombre.trim()) {
       return;
     }
 
-    onGuardar({
+    await onGuardar({
       ...formularioProducto,
       imagen: imagenSeleccionada,
     });
@@ -104,7 +104,7 @@ function ModificarProducto({ productoInicial, onGuardar, onCancelar }: Modificar
           className="inventarioFormularioAgregar"
           onSubmit={(event) => {
             event.preventDefault();
-            guardarCambios();
+            void guardarCambios();
           }}
         >
           <input

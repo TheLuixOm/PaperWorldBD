@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 import './Inventario.css';
-import { productosIniciales, type Producto } from '../datosInventario';
+import type { Producto } from '../datosInventario';
 import UsuarioMenu from '../Barras/UsuarioMenu';
 import AgregarProducto, { type DatosAgregarProducto } from './AgregarProducto';
 import ModificarProducto from './ModificarProducto';
@@ -18,7 +18,9 @@ import {
 
 function Inventario() {
     const [textoBusqueda, setTextoBusqueda] = useState('');
-    const [productos, setProductos] = useState(productosIniciales);
+    const [productos, setProductos] = useState<Producto[]>([]);
+    const [cargando, setCargando] = useState(true);
+    const [errorCarga, setErrorCarga] = useState<string | null>(null);
     const [vistaActual, setVistaActual] = useState<'lista' | 'agregar' | 'modificar'>('lista');
     const [productoEnEdicion, setProductoEnEdicion] = useState<Producto | null>(null);
     const [productoPendienteEliminar, setProductoPendienteEliminar] = useState<Producto | null>(null);
@@ -29,39 +31,37 @@ function Inventario() {
     const inputBusquedaRef = useRef<HTMLInputElement | null>(null);
     const productosPorPagina = 8;
 
+    const cargarInventario = async () => {
+        setCargando(true);
+        setErrorCarga(null);
+
+        try {
+            const resp = await listarInventario({ limit: 500, offset: 0 });
+
+            const mapeados: Producto[] = resp.items.map((it) => ({
+                id: formatProductoIdDisplay(it.id_producto),
+                nombre: it.nombre,
+                categoria: it.categoria || 'sin categoria',
+                precio: formatPrecioDisplay(it.precio),
+                cantidad: it.cantidad,
+                vendidos: 0,
+                imagen: it.imagen || `https://picsum.photos/seed/${it.id_producto}/120/80`,
+            }));
+
+            setProductos(mapeados);
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('[inventario] no se pudo cargar desde API', err);
+            setProductos([]);
+            setErrorCarga('No se pudo cargar el inventario desde la base de datos.');
+        } finally {
+            setCargando(false);
+        }
+    };
+
     useEffect(() => {
-        let cancelado = false;
-
-        const cargar = async () => {
-            try {
-                const resp = await listarInventario({ limit: 500, offset: 0 });
-                if (cancelado) {
-                    return;
-                }
-
-                const mapeados: Producto[] = resp.items.map((it) => ({
-                    id: formatProductoIdDisplay(it.id_producto),
-                    nombre: it.nombre,
-                    categoria: it.categoria || 'sin categoria',
-                    precio: formatPrecioDisplay(it.precio),
-                    cantidad: it.cantidad,
-                    vendidos: 0,
-                    imagen: it.imagen || `https://picsum.photos/seed/${it.id_producto}/120/80`,
-                }));
-
-                setProductos(mapeados);
-            } catch (err) {
-                // Si falla la API, deja el inventario mock para no romper la UI.
-                // eslint-disable-next-line no-console
-                console.error('[inventario] no se pudo cargar desde API', err);
-            }
-        };
-
-        void cargar();
-
-        return () => {
-            cancelado = true;
-        };
+        void cargarInventario();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const solicitarEliminarProducto = (producto: Producto) => {
@@ -80,12 +80,11 @@ function Inventario() {
         void (async () => {
             try {
                 await eliminarProductoInventario(producto.id);
-                setProductos((productosActuales) =>
-                    productosActuales.filter((p) => p.id !== producto.id)
-                );
+                await cargarInventario();
             } catch (err) {
                 // eslint-disable-next-line no-console
                 console.error('[inventario] no se pudo eliminar en API', err);
+                setErrorCarga('No se pudo eliminar el producto en la base de datos.');
             }
         })();
     };
@@ -168,155 +167,65 @@ function Inventario() {
         setVistaActual('lista');
     };
 
-    const generarIdProducto = (referencia: string) => {
-        const referenciaLimpia = referencia.trim();
-
-        if (referenciaLimpia) {
-            return referenciaLimpia;
-        }
-
-        const mayorId = productos.reduce((maximoActual, productoActual) => {
-            const numeroActual = Number(productoActual.id.replace(/[^0-9]/g, ''));
-
-            if (Number.isNaN(numeroActual)) {
-                return maximoActual;
-            }
-
-            return Math.max(maximoActual, numeroActual);
-        }, 0);
-
-        return `#${String(mayorId + 1).padStart(4, '0')}`;
-    };
-
-    const construirProductoActualizado = (
-        productoBase: Producto,
-        datosFormulario: DatosModificarProducto
-    ): Producto => {
-        const cantidad = Number.parseInt(datosFormulario.cantidad, 10);
-        const precioConPrefijo = datosFormulario.precio.trim();
-
-        return {
-            id: productoBase.id,
-            nombre: datosFormulario.nombre.trim() || 'Producto sin nombre',
-            categoria: datosFormulario.categoria.trim() || 'sin categoria',
-            precio: precioConPrefijo.startsWith('$') ? precioConPrefijo : `$ ${precioConPrefijo || '0'}`,
-            cantidad: Number.isNaN(cantidad) ? 0 : cantidad,
-            vendidos: productoBase.vendidos,
-            imagen:
-                datosFormulario.imagen ||
-                productoBase.imagen ||
-                `https://picsum.photos/seed/${Date.now()}/120/80`,
-        };
-    };
-
-    const guardarCambiosProducto = (datosFormulario: DatosModificarProducto) => {
+    const guardarCambiosProducto = async (datosFormulario: DatosModificarProducto) => {
         if (!productoEnEdicion) {
-            return;
+            return false;
         }
 
-        const productoBase = productoEnEdicion;
-        const productoActualizado = construirProductoActualizado(productoBase, datosFormulario);
+        try {
+            const precio = parsePrecioInput(datosFormulario.precio);
+            const cantidad = Number.parseInt(datosFormulario.cantidad, 10);
+            const imagen = datosFormulario.imagen?.startsWith('blob:') ? '' : datosFormulario.imagen;
 
-        // Actualiza UI optimísticamente
-        setProductos((productosActuales) =>
-            productosActuales.map((producto) =>
-                producto.id === productoBase.id ? productoActualizado : producto
-            )
-        );
+            await actualizarProductoInventario(productoEnEdicion.id, {
+                nombre: datosFormulario.nombre.trim() || productoEnEdicion.nombre,
+                referencia: datosFormulario.referencia,
+                categoria: datosFormulario.categoria,
+                precio,
+                cantidad: Number.isNaN(cantidad) ? 0 : cantidad,
+                imagen,
+            });
 
-        cerrarVistaFormulario();
-
-        void (async () => {
-            try {
-                const precio = parsePrecioInput(datosFormulario.precio);
-                const cantidad = Number.parseInt(datosFormulario.cantidad, 10);
-                const imagen = datosFormulario.imagen?.startsWith('blob:') ? '' : datosFormulario.imagen;
-
-                const resp = await actualizarProductoInventario(productoBase.id, {
-                    nombre: datosFormulario.nombre.trim() || productoBase.nombre,
-                    referencia: datosFormulario.referencia,
-                    categoria: datosFormulario.categoria,
-                    precio,
-                    cantidad: Number.isNaN(cantidad) ? 0 : cantidad,
-                    imagen,
-                });
-
-                const it = resp.item;
-                const sincronizado: Producto = {
-                    id: formatProductoIdDisplay(it.id_producto),
-                    nombre: it.nombre,
-                    categoria: it.categoria || 'sin categoria',
-                    precio: formatPrecioDisplay(it.precio),
-                    cantidad: it.cantidad,
-                    vendidos: productoBase.vendidos,
-                    imagen: it.imagen || productoActualizado.imagen,
-                };
-
-                setProductos((productosActuales) =>
-                    productosActuales.map((p) => (p.id === productoBase.id ? sincronizado : p))
-                );
-            } catch (err) {
-                // eslint-disable-next-line no-console
-                console.error('[inventario] no se pudo guardar cambios en API', err);
-            }
-        })();
+            await cargarInventario();
+            cerrarVistaFormulario();
+            return true;
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('[inventario] no se pudo guardar cambios en API', err);
+            setErrorCarga('No se pudieron guardar los cambios en la base de datos.');
+            return false;
+        }
     };
 
-    const guardarNuevoProducto = (datosFormulario: DatosAgregarProducto, mantenerAbierto: boolean) => {
-        const cantidad = Number.parseInt(datosFormulario.cantidad, 10);
-        const precioConPrefijo = datosFormulario.precio.trim();
+    const guardarNuevoProducto = async (datosFormulario: DatosAgregarProducto, mantenerAbierto: boolean) => {
+        try {
+            const precio = parsePrecioInput(datosFormulario.precio);
+            const cantidad = Number.parseInt(datosFormulario.cantidad, 10);
+            const imagen = datosFormulario.imagen?.startsWith('blob:') ? '' : datosFormulario.imagen;
 
-        const nuevoProducto: Producto = {
-            id: generarIdProducto(datosFormulario.referencia),
-            nombre: datosFormulario.nombre.trim() || 'Producto sin nombre',
-            categoria: datosFormulario.categoria.trim() || 'sin categoria',
-            precio: precioConPrefijo.startsWith('$') ? precioConPrefijo : `$ ${precioConPrefijo || '0'}`,
-            cantidad: Number.isNaN(cantidad) ? 0 : cantidad,
-            vendidos: 0,
-            imagen: datosFormulario.imagen || `https://picsum.photos/seed/${Date.now()}/120/80`,
-        };
+            await crearProductoInventario({
+                referencia: datosFormulario.referencia,
+                nombre: datosFormulario.nombre.trim() || 'Producto sin nombre',
+                categoria: datosFormulario.categoria,
+                precio,
+                cantidad: Number.isNaN(cantidad) ? 0 : cantidad,
+                imagen,
+            });
 
-        setProductos((productosActuales) => [nuevoProducto, ...productosActuales]);
-        setPaginaActual(1);
+            await cargarInventario();
+            setPaginaActual(1);
 
-        if (!mantenerAbierto) {
-            cerrarVistaFormulario();
-        }
-
-        void (async () => {
-            try {
-                const precio = parsePrecioInput(datosFormulario.precio);
-                const imagen = datosFormulario.imagen?.startsWith('blob:') ? '' : datosFormulario.imagen;
-                const resp = await crearProductoInventario({
-                    referencia: datosFormulario.referencia,
-                    nombre: datosFormulario.nombre.trim() || 'Producto sin nombre',
-                    categoria: datosFormulario.categoria,
-                    precio,
-                    cantidad: Number.isNaN(cantidad) ? 0 : cantidad,
-                    imagen,
-                });
-
-                const it = resp.item;
-                const sincronizado: Producto = {
-                    id: formatProductoIdDisplay(it.id_producto),
-                    nombre: it.nombre,
-                    categoria: it.categoria || 'sin categoria',
-                    precio: formatPrecioDisplay(it.precio),
-                    cantidad: it.cantidad,
-                    vendidos: 0,
-                    imagen: it.imagen || nuevoProducto.imagen,
-                };
-
-                setProductos((productosActuales) => {
-                    // Reemplaza el item optimístico (por id o por nombre+imagen)
-                    const sinDuplicados = productosActuales.filter((p) => p.id !== nuevoProducto.id);
-                    return [sincronizado, ...sinDuplicados];
-                });
-            } catch (err) {
-                // eslint-disable-next-line no-console
-                console.error('[inventario] no se pudo crear en API', err);
+            if (!mantenerAbierto) {
+                cerrarVistaFormulario();
             }
-        })();
+
+            return true;
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('[inventario] no se pudo crear en API', err);
+            setErrorCarga('No se pudo crear el producto en la base de datos.');
+            return false;
+        }
     };
 
     const claseVista = [
@@ -393,6 +302,14 @@ function Inventario() {
 
                         <section className="inventarioPanel">
                             <h3 className="inventarioSubtitulo">Lista de productos:</h3>
+
+                            {cargando ? (
+                                <p>Cargando inventario...</p>
+                            ) : errorCarga ? (
+                                <p>{errorCarga}</p>
+                            ) : productos.length === 0 ? (
+                                <p>No hay productos registrados.</p>
+                            ) : null}
 
                     <div className="inventarioTablaContenedor">
                         <table className="inventarioTabla">

@@ -15,7 +15,7 @@ export type DatosAgregarProducto = DatosFormulario & {
 };
 
 type AgregarProductoProps = {
-  onGuardar: (datos: DatosAgregarProducto, mantenerAbierto: boolean) => void;
+  onGuardar: (datos: DatosAgregarProducto, mantenerAbierto: boolean) => Promise<boolean>;
   onCancelar: () => void;
 };
 
@@ -77,12 +77,12 @@ function AgregarProducto({ onGuardar, onCancelar }: AgregarProductoProps) {
     setImagenSeleccionada(urlTemporal);
   };
 
-  const guardarProducto = (mantenerAbierto: boolean) => {
+  const guardarProducto = async (mantenerAbierto: boolean) => {
     if (!formularioProducto.nombre.trim()) {
       return;
     }
 
-    onGuardar(
+    const ok = await onGuardar(
       {
         ...formularioProducto,
         imagen: imagenSeleccionada,
@@ -90,7 +90,7 @@ function AgregarProducto({ onGuardar, onCancelar }: AgregarProductoProps) {
       mantenerAbierto
     );
 
-    if (mantenerAbierto) {
+    if (ok && mantenerAbierto) {
       limpiarFormulario();
     }
   };
@@ -110,7 +110,7 @@ function AgregarProducto({ onGuardar, onCancelar }: AgregarProductoProps) {
           className="inventarioFormularioAgregar"
           onSubmit={(event) => {
             event.preventDefault();
-            guardarProducto(false);
+            void guardarProducto(false);
           }}
         >
           <input

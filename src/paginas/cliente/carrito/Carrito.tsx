@@ -31,7 +31,12 @@ function Carrito() {
               <span className="inicioClienteMarcaTexto">Paper world</span>
             </div>
 
-            <form className="inicioClienteBuscador" role="search" aria-label="Busqueda">
+            <form
+              className="inicioClienteBuscador"
+              role="search"
+              aria-label="Busqueda"
+              onSubmit={(e) => e.preventDefault()}
+            >
               <span className="inicioClienteBuscadorIcono" aria-hidden="true">
                 <Search />
               </span>
