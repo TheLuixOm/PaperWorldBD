@@ -20,7 +20,7 @@ function LoginMov({ onIrRegistro }: LoginMovProps) {
     const clave = contrasena.trim();
 
     if (!usuario || !clave) {
-      setError('Ingresa correo y contraseña.');
+      setError('Ingresa correo o usuario y contraseña.');
       return;
     }
 
@@ -35,13 +35,14 @@ function LoginMov({ onIrRegistro }: LoginMovProps) {
         },
         body: JSON.stringify({
           correo: usuario,
+          username: usuario,
           contraseña: clave,
         }),
       });
 
       const datos = await respuesta.json();
       if (!respuesta.ok) {
-        setError(datos?.error || 'No se pudo iniciar sesión.');
+        setError(datos?.error || 'No se pudo iniciar sesión. Revisa correo/usuario y contraseña.');
         return;
       }
 
@@ -82,15 +83,15 @@ function LoginMov({ onIrRegistro }: LoginMovProps) {
       <section className="login-mov-content">
         <form className="login-mov-card" onSubmit={iniciarSesion}>
           <label className="login-mov-label" htmlFor="correo">
-            Correo
+            Correo o usuario
           </label>
           <input
             id="correo"
             name="correo"
-            type="email"
+            type="text"
             className="login-mov-input"
-            placeholder="Value"
-            autoComplete="email"
+            placeholder="Correo o usuario"
+            autoComplete="username"
             value={correo}
             onChange={(event) => setCorreo(event.target.value)}
           />

@@ -23,7 +23,7 @@ export const authRequired: RequestHandler = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, env.JWT_SECRET) as jwt.JwtPayload;
-    const sub = typeof decoded.sub === 'string' ? decoded.sub : '';
+    const sub = typeof decoded.sub === 'string' || typeof decoded.sub === 'number' ? String(decoded.sub) : '';
     const username = typeof (decoded as JwtPayload).username === 'string' ? (decoded as JwtPayload).username : '';
     const roles = Array.isArray((decoded as JwtPayload).roles)
       ? (decoded as JwtPayload).roles.filter((r): r is string => typeof r === 'string')

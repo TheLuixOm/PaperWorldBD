@@ -78,6 +78,11 @@ function RegisterEsc() {
             return;
         }
 
+        if (!dia || !mes || !anio) {
+            setError('La fecha de nacimiento es obligatoria.');
+            return;
+        }
+
         let edad: number | undefined;
         if (dia && mes && anio) {
             const fecha = new Date(Number(anio), Number(mes) - 1, Number(dia));
@@ -101,7 +106,6 @@ function RegisterEsc() {
                     correo,
                     username,
                     password,
-                    rol: 'cliente',
                     edad,
                 }),
             });
@@ -112,9 +116,7 @@ function RegisterEsc() {
                 return;
             }
 
-            localStorage.setItem('paperworldUsuario', correo);
-            localStorage.setItem('paperworldToken', datos.token);
-            navigate('/cliente/inicio');
+            volverALogin();
         } catch {
             setError('Error de conexión con el servidor.');
         } finally {
@@ -226,21 +228,21 @@ function RegisterEsc() {
                         />
 
 						<div className='fecha' aria-label="Fecha de nacimiento">
-							<select className="fecha_select fecha_select_dia" name="dia" defaultValue="" aria-label="Día">
+                            <select className="fecha_select fecha_select_dia" name="dia" defaultValue="" aria-label="Día" required>
 								<option value="" disabled>DD</option>
 								{dias.map((dia) => (
 									<option key={dia} value={dia}>{dia}</option>
 								))}
 							</select>
 
-							<select className="fecha_select fecha_select_mes" name="mes" defaultValue="" aria-label="Mes">
+                            <select className="fecha_select fecha_select_mes" name="mes" defaultValue="" aria-label="Mes" required>
 								<option value="" disabled>MM</option>
 								{meses.map((mes) => (
 									<option key={mes} value={mes}>{mes}</option>
 								))}
 							</select>
 
-							<select className="fecha_select fecha_select_anio" name="anio" defaultValue="" aria-label="Año">
+                            <select className="fecha_select fecha_select_anio" name="anio" defaultValue="" aria-label="Año" required>
 								<option value="" disabled>YYYY</option>
 								{years.map((year) => (
 									<option key={year} value={year}>{year}</option>

@@ -57,7 +57,7 @@ function LoginEsc() {
 		const clave = password.trim();
 
 		if (!usuario || !clave) {
-			setError('Ingresa correo y contraseña.');
+			setError('Ingresa correo o usuario y contraseña.');
 			return;
 		}
 
@@ -72,13 +72,14 @@ function LoginEsc() {
 				},
 				body: JSON.stringify({
 					correo: usuario,
+					username: usuario,
 					contraseña: clave,
 				}),
 			});
 
 			const datos = await respuesta.json();
 			if (!respuesta.ok) {
-				setError(datos?.error || 'No se pudo iniciar sesión.');
+				setError(datos?.error || 'No se pudo iniciar sesión. Revisa correo/usuario y contraseña.');
 				return;
 			}
 
@@ -145,15 +146,15 @@ function LoginEsc() {
 
 					<form className="login-esc-card" onSubmit={iniciarSesion}>
 						<label className="login-esc-label" htmlFor="email">
-							Email
+							Email o usuario
 						</label>
 						<input
 							id="email"
 							name="email"
-							type="email"
+							type="text"
 							className="login-esc-input"
-							placeholder="Value"
-							autoComplete="email"
+							placeholder="Correo o usuario"
+							autoComplete="username"
 							value={email}
 							onChange={(event) => setEmail(event.target.value)}
 						/>

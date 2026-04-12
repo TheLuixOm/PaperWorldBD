@@ -40,6 +40,11 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
       return;
     }
 
+    if (!fecha) {
+      setError('La fecha de nacimiento es obligatoria.');
+      return;
+    }
+
     let edad: number | undefined;
     if (fecha) {
       const fechaNacimiento = new Date(fecha);
@@ -63,7 +68,6 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
           correo,
           username,
           password,
-          rol: 'cliente',
           edad,
         }),
       });
@@ -74,9 +78,7 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
         return;
       }
 
-      localStorage.setItem('paperworldUsuario', correo);
-      localStorage.setItem('paperworldToken', datos.token);
-      navegar('/cliente/inicio');
+      navegar('/login');
     } catch {
       setError('Error de conexión con el servidor.');
     } finally {
@@ -118,7 +120,7 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
           <input className="registro-mov-campo" name="username" type="text" placeholder="Usuario" autoComplete="username" required />
           <input className="registro-mov-campo" name="password" type="password" placeholder="Contraseña" autoComplete="new-password" required />
 
-          <input className="registro-mov-campo registro-mov-campo-fecha" name="fecha_nacimiento" type="date" aria-label="Fecha de nacimiento" />
+          <input className="registro-mov-campo registro-mov-campo-fecha" name="fecha_nacimiento" type="date" aria-label="Fecha de nacimiento" required />
 
           <button type="submit" className="registro-mov-boton-crear" disabled={cargando}>
             {cargando ? 'Creando cuenta...' : 'Crear Cuenta'}
