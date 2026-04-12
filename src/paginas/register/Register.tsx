@@ -16,6 +16,8 @@ function RegisterEsc() {
     const navigate = useNavigate();
     const location = useLocation();
     const [animando, setAnimando] = useState(false);
+    const [error, setError] = useState('');
+    const [cargando, setCargando] = useState(false);
     const layoutRef = useRef<HTMLElement | null>(null);
     const visualRef = useRef<HTMLDivElement | null>(null);
     const yaAnimadoRef = useRef(false);
@@ -47,9 +49,77 @@ function RegisterEsc() {
         });
     };
 
-    const registrarYVolverALogin = (event: React.FormEvent) => {
+    const calcularEdadDesdeFecha = (fechaNacimiento: Date) => {
+        const hoy = new Date();
+        let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+        const mesDiff = hoy.getMonth() - fechaNacimiento.getMonth();
+
+        if (mesDiff < 0 || (mesDiff === 0 && hoy.getDate() < fechaNacimiento.getDate())) {
+            edad -= 1;
+        }
+
+        return edad;
+    };
+
+    const registrarYVolverALogin = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        volverALogin();
+        const form = new FormData(event.currentTarget);
+        const nombre = String(form.get('nombre') ?? '').trim();
+        const apellido = String(form.get('apellido') ?? '').trim();
+        const correo = String(form.get('Email') ?? '').trim();
+        const username = String(form.get('nombre_usuario') ?? '').trim();
+        const password = String(form.get('password') ?? '').trim();
+        const dia = String(form.get('dia') ?? '').trim();
+        const mes = String(form.get('mes') ?? '').trim();
+        const anio = String(form.get('anio') ?? '').trim();
+
+        if (!nombre || !apellido || !correo || !username || !password) {
+            setError('Completa todos los campos obligatorios.');
+            return;
+        }
+
+        let edad: number | undefined;
+        if (dia && mes && anio) {
+            const fecha = new Date(Number(anio), Number(mes) - 1, Number(dia));
+            if (!Number.isNaN(fecha.getTime())) {
+                edad = calcularEdadDesdeFecha(fecha);
+            }
+        }
+
+        setError('');
+        setCargando(true);
+
+        try {
+            const respuesta = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    nombre,
+                    apellido,
+                    correo,
+                    username,
+                    password,
+                    rol: 'cliente',
+                    edad,
+                }),
+            });
+
+            const datos = await respuesta.json();
+            if (!respuesta.ok) {
+                setError(datos?.error || 'No se pudo registrar la cuenta.');
+                return;
+            }
+
+            localStorage.setItem('paperworldUsuario', correo);
+            localStorage.setItem('paperworldToken', datos.token);
+            navigate('/cliente/inicio');
+        } catch {
+            setError('Error de conexión con el servidor.');
+        } finally {
+            setCargando(false);
+        }
     };
 
     useLayoutEffect(() => {
@@ -184,13 +254,15 @@ function RegisterEsc() {
                         </label>
 
                         <div className="register_actions" role="group" aria-label="Acciones de registro">
-                            <button type="submit" className="register_button register_button_primary">
-                                Registrarse
+                            <button type="submit" className="register_button register_button_primary" disabled={cargando}>
+                                {cargando ? 'Creando cuenta...' : 'Registrarse'}
                             </button>
                             <button type="button" className="register_button register_button_secondary" onClick={volverALogin} disabled={animando}>
                                 Volver
                             </button>
                         </div>
+
+                        {error ? <p className="register_error">{error}</p> : null}
                     </form>
 				</div>
 

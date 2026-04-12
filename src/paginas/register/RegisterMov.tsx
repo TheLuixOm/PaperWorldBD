@@ -1,5 +1,6 @@
 import './RegisterMov.css';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import loginImage from '../../images/login.svg';
 import clipNegro from '../../images/Clip_negro.svg';
 
@@ -9,6 +10,79 @@ type RegisterMovProps = {
 
 function RegisterMov({ onIrLogin }: RegisterMovProps) {
   const navegar = useNavigate();
+  const [error, setError] = useState('');
+  const [cargando, setCargando] = useState(false);
+
+  const calcularEdadDesdeFecha = (fechaNacimiento: Date) => {
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+    const mesDiff = hoy.getMonth() - fechaNacimiento.getMonth();
+
+    if (mesDiff < 0 || (mesDiff === 0 && hoy.getDate() < fechaNacimiento.getDate())) {
+      edad -= 1;
+    }
+
+    return edad;
+  };
+
+  const registrarCuenta = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const nombre = String(form.get('nombre') ?? '').trim();
+    const apellido = String(form.get('apellido') ?? '').trim();
+    const correo = String(form.get('correo') ?? '').trim();
+    const username = String(form.get('username') ?? '').trim();
+    const password = String(form.get('password') ?? '').trim();
+    const fecha = String(form.get('fecha_nacimiento') ?? '').trim();
+
+    if (!nombre || !apellido || !correo || !username || !password) {
+      setError('Completa todos los campos obligatorios.');
+      return;
+    }
+
+    let edad: number | undefined;
+    if (fecha) {
+      const fechaNacimiento = new Date(fecha);
+      if (!Number.isNaN(fechaNacimiento.getTime())) {
+        edad = calcularEdadDesdeFecha(fechaNacimiento);
+      }
+    }
+
+    setError('');
+    setCargando(true);
+
+    try {
+      const respuesta = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nombre,
+          apellido,
+          correo,
+          username,
+          password,
+          rol: 'cliente',
+          edad,
+        }),
+      });
+
+      const datos = await respuesta.json();
+      if (!respuesta.ok) {
+        setError(datos?.error || 'No se pudo registrar la cuenta.');
+        return;
+      }
+
+      localStorage.setItem('paperworldUsuario', correo);
+      localStorage.setItem('paperworldToken', datos.token);
+      navegar('/cliente/inicio');
+    } catch {
+      setError('Error de conexión con el servidor.');
+    } finally {
+      setCargando(false);
+    }
+  };
 
   const irAInicioSesion = () => {
     if (onIrLogin) {
@@ -28,7 +102,7 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
       </section>
 
       <section className="registro-mov-contenido">
-        <form className="registro-mov-tarjeta" onSubmit={(event) => event.preventDefault()}>
+        <form className="registro-mov-tarjeta" onSubmit={registrarCuenta}>
           <h2 className="registro-mov-titulo">Crear Cuenta</h2>
           <p className="registro-mov-subtitulo">
             Ya tienes una cuenta?{' '}
@@ -37,23 +111,25 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
             </button>
           </p>
 
-          <input className="registro-mov-campo" type="text" placeholder="Nombre" autoComplete="given-name" />
-          <input className="registro-mov-campo" type="text" placeholder="Apellido" autoComplete="family-name" />
-          <input className="registro-mov-campo" type="tel" placeholder="Telefono" autoComplete="tel" />
-          <input className="registro-mov-campo" type="email" placeholder="Correo" autoComplete="email" />
-          <input className="registro-mov-campo" type="text" placeholder="Usuario" autoComplete="username" />
-          <input className="registro-mov-campo" type="password" placeholder="Contraseña" autoComplete="new-password" />
+          <input className="registro-mov-campo" name="nombre" type="text" placeholder="Nombre" autoComplete="given-name" required />
+          <input className="registro-mov-campo" name="apellido" type="text" placeholder="Apellido" autoComplete="family-name" required />
+          <input className="registro-mov-campo" name="telefono" type="tel" placeholder="Telefono" autoComplete="tel" />
+          <input className="registro-mov-campo" name="correo" type="email" placeholder="Correo" autoComplete="email" required />
+          <input className="registro-mov-campo" name="username" type="text" placeholder="Usuario" autoComplete="username" required />
+          <input className="registro-mov-campo" name="password" type="password" placeholder="Contraseña" autoComplete="new-password" required />
 
-          <input className="registro-mov-campo registro-mov-campo-fecha" type="date" aria-label="Fecha de nacimiento" />
+          <input className="registro-mov-campo registro-mov-campo-fecha" name="fecha_nacimiento" type="date" aria-label="Fecha de nacimiento" />
 
-          <button type="submit" className="registro-mov-boton-crear">
-            Crear Cuenta
+          <button type="submit" className="registro-mov-boton-crear" disabled={cargando}>
+            {cargando ? 'Creando cuenta...' : 'Crear Cuenta'}
           </button>
 
           <label className="registro-mov-linea-aceptacion">
-            <input type="checkbox" /> He leído y acepto los{' '}
+            <input type="checkbox" required /> He leído y acepto los{' '}
             <span className="registro-mov-terminos">términos y condiciones</span>
           </label>
+
+          {error ? <p className="registro-mov-error">{error}</p> : null}
 
         </form>
 

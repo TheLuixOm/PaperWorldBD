@@ -11,17 +11,55 @@ function LoginMov({ onIrRegistro }: LoginMovProps) {
   const navigate = useNavigate();
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
+  const [error, setError] = useState('');
+  const [cargando, setCargando] = useState(false);
 
-  const iniciarSesion = (event: React.FormEvent) => {
+  const iniciarSesion = async (event: React.FormEvent) => {
     event.preventDefault();
     const usuario = correo.trim();
+    const clave = contrasena.trim();
 
-    if (!usuario) {
+    if (!usuario || !clave) {
+      setError('Ingresa correo y contraseña.');
       return;
     }
 
-    localStorage.setItem('paperworldUsuario', usuario);
-    navigate('/inventario');
+    setError('');
+    setCargando(true);
+
+    try {
+      const respuesta = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          correo: usuario,
+          contraseña: clave,
+        }),
+      });
+
+      const datos = await respuesta.json();
+      if (!respuesta.ok) {
+        setError(datos?.error || 'No se pudo iniciar sesión.');
+        return;
+      }
+
+      localStorage.setItem('paperworldUsuario', usuario);
+      localStorage.setItem('paperworldToken', datos.token);
+
+      const roles: string[] = Array.isArray(datos?.user?.roles) ? datos.user.roles : [];
+      if (roles.includes('cliente')) {
+        navigate('/cliente/inicio');
+        return;
+      }
+
+      navigate('/dashboard');
+    } catch {
+      setError('Error de conexión con el servidor.');
+    } finally {
+      setCargando(false);
+    }
   };
 
   const irARegistro = () => {
@@ -72,8 +110,8 @@ function LoginMov({ onIrRegistro }: LoginMovProps) {
           />
 
           <div className="login-mov-actions" role="group" aria-label="Acciones de login">
-            <button type="submit" className="login-mov-button login-mov-button-primary">
-              Login
+            <button type="submit" className="login-mov-button login-mov-button-primary" disabled={cargando}>
+              {cargando ? 'Entrando...' : 'Login'}
             </button>
             <button
               type="button"
@@ -87,6 +125,8 @@ function LoginMov({ onIrRegistro }: LoginMovProps) {
           <button type="button" className="login-mov-forgot">
             ¿Olvido su contraseña?
           </button>
+
+          {error ? <p className="login-mov-error">{error}</p> : null}
         </form>
       </section>
     </main>

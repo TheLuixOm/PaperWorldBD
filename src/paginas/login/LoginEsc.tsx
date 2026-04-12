@@ -17,6 +17,8 @@ function LoginEsc() {
 	const location = useLocation();
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
+	const [error, setError] = useState('');
+	const [cargando, setCargando] = useState(false);
 	const [animando, setAnimando] = useState(false);
 	const visualRef = useRef<HTMLDivElement | null>(null);
 	const yaAnimadoRef = useRef(false);
@@ -49,16 +51,54 @@ function LoginEsc() {
 			});
 	}, [location.state]);
 
-	const iniciarSesion = (event: React.FormEvent) => {
+	const iniciarSesion = async (event: React.FormEvent) => {
 		event.preventDefault();
 		const usuario = email.trim();
+		const clave = password.trim();
 
-		if (!usuario) {
+		if (!usuario || !clave) {
+			setError('Ingresa correo y contraseña.');
 			return;
 		}
-		localStorage.setItem('paperworldUsuario', usuario);
-		navigate('/dashboard');
+
+		setError('');
+		setCargando(true);
+
+		try {
+			const respuesta = await fetch('/api/auth/login', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					correo: usuario,
+					contraseña: clave,
+				}),
+			});
+
+			const datos = await respuesta.json();
+			if (!respuesta.ok) {
+				setError(datos?.error || 'No se pudo iniciar sesión.');
+				return;
+			}
+
+			localStorage.setItem('paperworldUsuario', usuario);
+			localStorage.setItem('paperworldToken', datos.token);
+
+			const roles: string[] = Array.isArray(datos?.user?.roles) ? datos.user.roles : [];
+			if (roles.includes('cliente')) {
+				navigate('/cliente/inicio');
+				return;
+			}
+
+			navigate('/dashboard');
+		} catch {
+			setError('Error de conexión con el servidor.');
+		} finally {
+			setCargando(false);
+		}
 	};
+
 
 	const irARegistro = () => {
 		if (animando) {
@@ -133,8 +173,8 @@ function LoginEsc() {
 						/>
 
 						<div className="login-esc-actions" role="group" aria-label="Acciones de login">
-							<button type="submit" className="login-esc-button login-esc-button-primary">
-								Log in
+							<button type="submit" className="login-esc-button login-esc-button-primary" disabled={cargando}>
+								{cargando ? 'Entrando...' : 'Log in'}
 							</button>
 							<button type="button" className="login-esc-button login-esc-button-secondary" onClick={irARegistro} disabled={animando}>
 								Sign In
@@ -144,6 +184,8 @@ function LoginEsc() {
 						<button type="button" className="login-esc-olvido">
 							¿Olvido su contraseña?
 						</button>
+
+						{error ? <p className="login-esc-error">{error}</p> : null}
 					</form>
 				</div>
 			</section>
