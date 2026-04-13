@@ -1,6 +1,15 @@
 import { type ChangeEvent, useEffect, useRef, useState } from 'react';
-import type { Producto } from '../datosInventario';
 import UsuarioMenu from '../Barras/UsuarioMenu';
+
+type Producto = {
+  id: string;
+  nombre: string;
+  categoria: string;
+  precio: string;
+  cantidad: number;
+  vendidos: number;
+  imagen: string;
+};
 
 type DatosFormulario = {
   nombre: string;

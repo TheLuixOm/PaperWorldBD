@@ -95,7 +95,6 @@ async function fetchProductoLatest(idProducto: bigint): Promise<ProductoInventar
     left join cambios_inv ci on ci.id_actualizacion = p.cambios_inv_id_actualizacion
     left join detalle_cat dc
       on dc.producto_id_producto = p.id_producto
-     and dc.producto_id_actualizacion = p.inventario_id_actualizacion
     left join categoria c on c.id_categoria = dc.categoria_id_categoria
     where p.id_producto = $1
     order by p.id_producto asc, p.inventario_id_actualizacion desc
@@ -125,7 +124,6 @@ async function fetchProductoLatestWithClient(client: PoolClient, idProducto: big
     left join cambios_inv ci on ci.id_actualizacion = p.cambios_inv_id_actualizacion
     left join detalle_cat dc
       on dc.producto_id_producto = p.id_producto
-     and dc.producto_id_actualizacion = p.inventario_id_actualizacion
     left join categoria c on c.id_categoria = dc.categoria_id_categoria
     where p.id_producto = $1
     order by p.id_producto asc, p.inventario_id_actualizacion desc
@@ -181,7 +179,6 @@ inventarioRouter.get('/', async (req, res, next) => {
       left join cambios_inv ci on ci.id_actualizacion = p.cambios_inv_id_actualizacion
       left join detalle_cat dc
         on dc.producto_id_producto = p.id_producto
-       and dc.producto_id_actualizacion = p.inventario_id_actualizacion
       left join categoria c on c.id_categoria = dc.categoria_id_categoria
       ${where.length ? `where ${where.join(' and ')}` : ''}
       order by p.id_producto asc, p.inventario_id_actualizacion desc
@@ -281,10 +278,10 @@ inventarioRouter.post('/', async (req, res, next) => {
       if (categoria) {
         const categoriaId = await ensureCategoria(client, categoria);
         await client.query(
-          `insert into detalle_cat (producto_id_producto, producto_id_actualizacion, categoria_id_categoria)
-           values ($1, $2, $3)
+          `insert into detalle_cat (producto_id_producto, categoria_id_categoria)
+           values ($1, $2)
            on conflict do nothing`,
-          [idProducto.toString(), idActualizacion.toString(), categoriaId.toString()],
+          [idProducto.toString(), categoriaId.toString()],
         );
       }
 
@@ -381,15 +378,12 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
 
       if (categoria) {
         const categoriaId = await ensureCategoria(client, categoria);
-        await client.query('delete from detalle_cat where producto_id_producto = $1 and producto_id_actualizacion = $2', [
-          idProducto.toString(),
-          invId.toString(),
-        ]);
+        await client.query('delete from detalle_cat where producto_id_producto = $1', [idProducto.toString()]);
         await client.query(
-          `insert into detalle_cat (producto_id_producto, producto_id_actualizacion, categoria_id_categoria)
-           values ($1, $2, $3)
+          `insert into detalle_cat (producto_id_producto, categoria_id_categoria)
+           values ($1, $2)
            on conflict do nothing`,
-          [idProducto.toString(), invId.toString(), categoriaId.toString()],
+          [idProducto.toString(), categoriaId.toString()],
         );
       }
 
@@ -437,14 +431,8 @@ inventarioRouter.delete('/:idProducto', async (req, res, next) => {
       const cambiosId = BigInt(latest.rows[0]!.cambios_inv_id_actualizacion);
 
       // Limpieza de relaciones "propias" del inventario
-      await client.query('delete from detalle_cat where producto_id_producto = $1 and producto_id_actualizacion = $2', [
-        idProducto.toString(),
-        invId.toString(),
-      ]);
-      await client.query('delete from detalles_proveedor where producto_id_producto = $1 and producto_id_actualizacion = $2', [
-        idProducto.toString(),
-        invId.toString(),
-      ]);
+      await client.query('delete from detalle_cat where producto_id_producto = $1', [idProducto.toString()]);
+      await client.query('delete from detalles_proveedor where producto_id_producto = $1', [idProducto.toString()]);
 
       try {
         await client.query('delete from producto where id_producto = $1 and inventario_id_actualizacion = $2', [

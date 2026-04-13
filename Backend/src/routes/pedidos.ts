@@ -148,7 +148,6 @@ pedidosRouter.post('/', async (req, res, next) => {
 
       const fetched: Array<{
         id_producto: bigint;
-        inventario_id_actualizacion: bigint;
         precio: number;
         stock: number;
         nombre: string;
@@ -157,20 +156,17 @@ pedidosRouter.post('/', async (req, res, next) => {
       for (const it of items) {
         const row = await client.query<{
           id_producto: string;
-          inventario_id_actualizacion: string;
           precio: number;
           stock: number;
           nombre: string;
         }>(
           `select
              p.id_producto::text as id_producto,
-             p.inventario_id_actualizacion::text as inventario_id_actualizacion,
              coalesce(p.precio, 0)::float as precio,
              coalesce(p.cantidad, 0) as stock,
              coalesce(p.nombreproducto, '') as nombre
            from producto p
            where p.id_producto = $1
-           order by p.inventario_id_actualizacion desc
            limit 1
            for update`,
           [it.idProducto.toString()],
@@ -188,7 +184,6 @@ pedidosRouter.post('/', async (req, res, next) => {
 
         fetched.push({
           id_producto: BigInt(r.id_producto),
-          inventario_id_actualizacion: BigInt(r.inventario_id_actualizacion),
           precio: Number.isFinite(r.precio) ? r.precio : 0,
           stock,
           nombre: r.nombre ?? '',
@@ -214,11 +209,10 @@ pedidosRouter.post('/', async (req, res, next) => {
 
         const upd = await client.query(
           `update producto
-             set cantidad = cantidad - $3
+             set cantidad = cantidad - $2
            where id_producto = $1
-             and inventario_id_actualizacion = $2
-             and cantidad >= $3`,
-          [f.id_producto.toString(), f.inventario_id_actualizacion.toString(), it.cantidad],
+             and cantidad >= $2`,
+          [f.id_producto.toString(), it.cantidad],
         );
 
         if (!upd.rowCount) {
@@ -226,9 +220,9 @@ pedidosRouter.post('/', async (req, res, next) => {
         }
 
         await client.query(
-          `insert into lista_productos (cantidad, producto_id_producto, producto_inv_id_actualiz, orden_id_orden)
-           values ($1, $2, $3, $4)`,
-          [it.cantidad, f.id_producto.toString(), f.inventario_id_actualizacion.toString(), idOrden.toString()],
+          `insert into lista_productos (cantidad, producto_id_producto, orden_id_orden)
+           values ($1, $2, $3)`,
+          [it.cantidad, f.id_producto.toString(), idOrden.toString()],
         );
       }
 
