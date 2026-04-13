@@ -1,40 +1,86 @@
+import { useEffect, useMemo, useState } from 'react';
 import './Inicio.css';
-import { productosIniciales } from '../datosInventario';
 import UsuarioMenu from '../Barras/UsuarioMenu';
+import { formatProductoIdDisplay, listarInventario } from '../../../api/inventario';
 
 const filasVacias = 0;
 
 function Inicio() {
-  const articulosAltaDemanda = [...productosIniciales]
-    .map((producto) => {
-      const puntajeDemanda = producto.vendidos * 0.7 + (300 - producto.cantidad) * 0.3;
+  const [productos, setProductos] = useState<Array<{
+    id: string;
+    nombre: string;
+    cantidad: number;
+    imagen: string;
+  }>>([]);
+  const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState<string | null>(null);
 
-      return {
+  useEffect(() => {
+    const cargarInventario = async () => {
+      setCargando(true);
+      setErrorCarga(null);
+
+      try {
+        const resp = await listarInventario({ limit: 500, offset: 0 });
+        const mapeados = resp.items.map((item) => ({
+          id: formatProductoIdDisplay(item.id_producto),
+          nombre: item.nombre || 'Producto sin nombre',
+          cantidad: Number.isFinite(item.cantidad) ? item.cantidad : 0,
+          imagen: item.imagen || `https://picsum.photos/seed/${item.id_producto}/120/80`,
+        }));
+
+        setProductos(mapeados);
+      } catch (err) {
+        setErrorCarga('No se pudo cargar el inventario para calcular la demanda.');
+        setProductos([]);
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    void cargarInventario();
+  }, []);
+
+  const articulosAltaDemanda = useMemo(() => {
+    const mayorStock = productos.reduce((max, producto) => Math.max(max, producto.cantidad), 0);
+
+    return [...productos]
+      .map((producto) => ({
         ...producto,
-        puntajeDemanda,
-      };
-    })
-    .sort((a, b) => b.puntajeDemanda - a.puntajeDemanda)
-    .slice(0, 5);
+        // TODO: Reemplazar por ventas reales cuando el modulo de ventas este integrado.
+        puntajeDemandaTemporal: Math.max(1, mayorStock - producto.cantidad + 1),
+      }))
+      .sort((a, b) => b.puntajeDemandaTemporal - a.puntajeDemandaTemporal)
+      .slice(0, 5);
+  }, [productos]);
 
-  const ventasUltimosDias = articulosAltaDemanda.map((articulo) => articulo.vendidos);
+  const nivelesDemanda = articulosAltaDemanda.map((articulo) => articulo.puntajeDemandaTemporal);
+  const ventasUltimosDias = useMemo(() => {
+    const promedioDemanda = nivelesDemanda.length
+      ? nivelesDemanda.reduce((suma, valor) => suma + valor, 0) / nivelesDemanda.length
+      : 0;
+
+    const factores = [0.82, 0.9, 0.98, 1.06, 1.14];
+    return factores.map((factor) => Math.max(1, Math.round(promedioDemanda * factor)));
+  }, [nivelesDemanda]);
+
   const ventaMaxima = Math.max(...ventasUltimosDias, 1);
-  const etiquetasDias = ventasUltimosDias.map((_, indice, array) => {
-    const fecha = new Date();
-    fecha.setDate(fecha.getDate() - (array.length - 1 - indice));
+  const etiquetasDias = useMemo(() => {
+    return ventasUltimosDias.map((_, indice, array) => {
+      const fecha = new Date();
+      fecha.setDate(fecha.getDate() - (array.length - 1 - indice));
 
-    return new Intl.DateTimeFormat('es-ES', { weekday: 'short' })
-      .format(fecha)
-      .replace('.', '')
-      .replace(/^./, (caracter) => caracter.toUpperCase());
-  });
+      return new Intl.DateTimeFormat('es-ES', { weekday: 'short' })
+        .format(fecha)
+        .replace('.', '')
+        .replace(/^./, (caracter) => caracter.toUpperCase());
+    });
+  }, [ventasUltimosDias]);
 
-  const vendidosTotales = productosIniciales.reduce((suma, producto) => suma + producto.vendidos, 0);
-  const stockTotal = productosIniciales.reduce((suma, producto) => suma + producto.cantidad, 0);
-  const totalInventario = vendidosTotales + stockTotal;
-  const porcentajeVendido = totalInventario > 0
-    ? Math.round((vendidosTotales / totalInventario) * 100)
-    : 0;
+  const stockTotal = productos.reduce((suma, producto) => suma + producto.cantidad, 0);
+  const stockBajo = productos.filter((producto) => producto.cantidad <= 10).length;
+  const totalProductos = productos.length;
+  const porcentajeStockBajo = totalProductos > 0 ? Math.round((stockBajo / totalProductos) * 100) : 0;
 
   return (
     <section className="inicioVista" id="inicio">
@@ -45,6 +91,10 @@ function Inicio() {
 
       <section className="inicioPanelPrincipal" aria-label="Articulos de alta demanda">
         <h3 className="inicioSubtitulo">Articulos de alta demanda</h3>
+        <p className="inicioNotaTemporal">Criterio temporal: productos con menor stock hasta integrar ventas.</p>
+
+        {cargando ? <p className="inicioEstadoCarga">Cargando productos...</p> : null}
+        {errorCarga ? <p className="inicioEstadoError">{errorCarga}</p> : null}
 
         <div className="inicioTablaContenedor">
           <table className="inicioTabla">
@@ -57,6 +107,12 @@ function Inicio() {
               </tr>
             </thead>
             <tbody>
+              {!cargando && articulosAltaDemanda.length === 0 ? (
+                <tr>
+                  <td colSpan={4}>No hay productos para mostrar.</td>
+                </tr>
+              ) : null}
+
               {articulosAltaDemanda.map((articulo) => (
                 <tr key={articulo.id}>
                   <td>{articulo.nombre}</td>
@@ -84,15 +140,15 @@ function Inicio() {
             className="inicioPie"
             aria-hidden="true"
             style={{
-              background: `conic-gradient(#7fc2f8 0 ${porcentajeVendido}%, #1b6eb1 ${porcentajeVendido}% 90%, #2d96de 90% 100%)`,
+              background: `conic-gradient(#7fc2f8 0 ${porcentajeStockBajo}%, #1b6eb1 ${porcentajeStockBajo}% 90%, #2d96de 90% 100%)`,
             }}
           >
-            <span className="inicioPieCentro">{porcentajeVendido}%</span>
+            <span className="inicioPieCentro">{porcentajeStockBajo}%</span>
           </div>
           <div className="inicioLeyenda">
             <p>
               <span className="inicioLeyendaPunto inicioLeyendaPuntoPrimario" />
-              Productos vendidos: {vendidosTotales}
+              Productos en stock bajo: {stockBajo}
             </p>
             <p>
               <span className="inicioLeyendaPunto inicioLeyendaPuntoSecundario" />

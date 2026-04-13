@@ -57,6 +57,24 @@
   color: #111827;
 }
 
+.inicioNotaTemporal {
+  margin: 0 0 10px;
+  text-align: center;
+  color: #475569;
+  font-size: 14px;
+}
+
+.inicioEstadoCarga,
+.inicioEstadoError {
+  margin: 0 0 10px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.inicioEstadoError {
+  color: #b91c1c;
+}
+
 .inicioTablaContenedor {
   width: 100%;
   overflow-x: auto;

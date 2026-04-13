@@ -16,6 +16,25 @@ import {
     parsePrecioInput,
 } from '../../../api/inventario';
 
+function mapearProductoDesdeApi(it: {
+    id_producto: string;
+    nombre: string;
+    categoria: string;
+    precio: number;
+    cantidad: number;
+    imagen: string;
+}) {
+    return {
+        id: formatProductoIdDisplay(it.id_producto),
+        nombre: it.nombre,
+        categoria: it.categoria || 'sin categoria',
+        precio: formatPrecioDisplay(it.precio),
+        cantidad: it.cantidad,
+        vendidos: 0,
+        imagen: it.imagen || `https://picsum.photos/seed/${it.id_producto}/120/80`,
+    } satisfies Producto;
+}
+
 function Inventario() {
     const [textoBusqueda, setTextoBusqueda] = useState('');
     const [productos, setProductos] = useState<Producto[]>([]);
@@ -29,26 +48,24 @@ function Inventario() {
     const [productoExpandidoId, setProductoExpandidoId] = useState<string | null>(null);
     const [busquedaMovilActiva, setBusquedaMovilActiva] = useState(false);
     const inputBusquedaRef = useRef<HTMLInputElement | null>(null);
+    const guardadoNuevoEnCursoRef = useRef(false);
     const productosPorPagina = 8;
 
-    const cargarInventario = async () => {
+    const cargarInventario = async (opciones?: { irAlFinal?: boolean }) => {
         setCargando(true);
         setErrorCarga(null);
 
         try {
             const resp = await listarInventario({ limit: 500, offset: 0 });
 
-            const mapeados: Producto[] = resp.items.map((it) => ({
-                id: formatProductoIdDisplay(it.id_producto),
-                nombre: it.nombre,
-                categoria: it.categoria || 'sin categoria',
-                precio: formatPrecioDisplay(it.precio),
-                cantidad: it.cantidad,
-                vendidos: 0,
-                imagen: it.imagen || `https://picsum.photos/seed/${it.id_producto}/120/80`,
-            }));
+            const mapeados: Producto[] = resp.items.map(mapearProductoDesdeApi);
 
             setProductos(mapeados);
+
+            if (opciones?.irAlFinal) {
+                const totalPaginasCalculadas = Math.max(1, Math.ceil(mapeados.length / productosPorPagina));
+                setPaginaActual(totalPaginasCalculadas);
+            }
         } catch (err) {
             // eslint-disable-next-line no-console
             console.error('[inventario] no se pudo cargar desde API', err);
@@ -198,12 +215,21 @@ function Inventario() {
     };
 
     const guardarNuevoProducto = async (datosFormulario: DatosAgregarProducto, mantenerAbierto: boolean) => {
+        if (guardadoNuevoEnCursoRef.current) {
+            return false;
+        }
+
+        guardadoNuevoEnCursoRef.current = true;
+        if (!mantenerAbierto) {
+            cerrarVistaFormulario();
+        }
+
         try {
             const precio = parsePrecioInput(datosFormulario.precio);
             const cantidad = Number.parseInt(datosFormulario.cantidad, 10);
             const imagen = datosFormulario.imagen?.startsWith('blob:') ? '' : datosFormulario.imagen;
 
-            await crearProductoInventario({
+            const productoCreado = await crearProductoInventario({
                 referencia: datosFormulario.referencia,
                 nombre: datosFormulario.nombre.trim() || 'Producto sin nombre',
                 categoria: datosFormulario.categoria,
@@ -212,11 +238,26 @@ function Inventario() {
                 imagen,
             });
 
-            await cargarInventario();
-            setPaginaActual(1);
+            if (productoCreado.item) {
+                const productoNuevo = mapearProductoDesdeApi(productoCreado.item);
 
-            if (!mantenerAbierto) {
-                cerrarVistaFormulario();
+                setProductos((productosActuales) => {
+                    const filtrados = productosActuales.filter((producto) => producto.id !== productoNuevo.id);
+                    const siguienteLista = [...filtrados, productoNuevo];
+                    const siguienteTotalPaginas = Math.max(1, Math.ceil(siguienteLista.length / productosPorPagina));
+                    setPaginaActual(siguienteTotalPaginas);
+                    return siguienteLista;
+                });
+            }
+
+            void cargarInventario({ irAlFinal: true }).catch((err) => {
+                // eslint-disable-next-line no-console
+                console.error('[inventario] no se pudo refrescar despues de crear', err);
+                setErrorCarga('Se guardo el producto, pero no se pudo refrescar la lista de inventario.');
+            });
+
+            if (productoCreado?.item) {
+                return true;
             }
 
             return true;
@@ -225,6 +266,8 @@ function Inventario() {
             console.error('[inventario] no se pudo crear en API', err);
             setErrorCarga('No se pudo crear el producto en la base de datos.');
             return false;
+        } finally {
+            guardadoNuevoEnCursoRef.current = false;
         }
     };
 

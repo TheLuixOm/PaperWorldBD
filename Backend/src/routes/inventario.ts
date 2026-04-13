@@ -107,6 +107,36 @@ async function fetchProductoLatest(idProducto: bigint): Promise<ProductoInventar
   return result.rows[0] ?? null;
 }
 
+async function fetchProductoLatestWithClient(client: PoolClient, idProducto: bigint): Promise<ProductoInventario | null> {
+  const result = await client.query<ProductoInventario>(
+    `
+    select distinct on (p.id_producto)
+      p.id_producto::text as id_producto,
+      p.inventario_id_actualizacion::text as inventario_id_actualizacion,
+      p.cambios_inv_id_actualizacion::text as cambios_inv_id_actualizacion,
+      coalesce(p.nombreproducto, '') as nombre,
+      coalesce(p.precio, 0)::float as precio,
+      coalesce(p.cantidad, 0) as cantidad,
+      coalesce(p.imagen, '') as imagen,
+      coalesce(c.nombrecategoria, '') as categoria,
+      ci.fecha_actualizacion::text as fecha_actualizacion,
+      ci.stock_minimo as stock_minimo
+    from producto p
+    left join cambios_inv ci on ci.id_actualizacion = p.cambios_inv_id_actualizacion
+    left join detalle_cat dc
+      on dc.producto_id_producto = p.id_producto
+     and dc.producto_id_actualizacion = p.inventario_id_actualizacion
+    left join categoria c on c.id_categoria = dc.categoria_id_categoria
+    where p.id_producto = $1
+    order by p.id_producto asc, p.inventario_id_actualizacion desc
+    limit 1
+    `,
+    [idProducto.toString()],
+  );
+
+  return result.rows[0] ?? null;
+}
+
 // GET /api/inventario
 inventarioRouter.get('/', async (req, res, next) => {
   try {
@@ -258,7 +288,7 @@ inventarioRouter.post('/', async (req, res, next) => {
         );
       }
 
-      const item = await fetchProductoLatest(idProducto);
+      const item = await fetchProductoLatestWithClient(client, idProducto);
       return item;
     });
 
@@ -363,7 +393,7 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
         );
       }
 
-      return fetchProductoLatest(idProducto);
+      return fetchProductoLatestWithClient(client, idProducto);
     });
 
     if (!updated) {

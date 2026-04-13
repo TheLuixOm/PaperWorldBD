@@ -31,6 +31,7 @@ const formularioVacio: DatosFormulario = {
 function AgregarProducto({ onGuardar, onCancelar }: AgregarProductoProps) {
   const [formularioProducto, setFormularioProducto] = useState<DatosFormulario>(formularioVacio);
   const [imagenSeleccionada, setImagenSeleccionada] = useState('');
+  const [guardando, setGuardando] = useState(false);
   const inputImagenRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -78,20 +79,29 @@ function AgregarProducto({ onGuardar, onCancelar }: AgregarProductoProps) {
   };
 
   const guardarProducto = async (mantenerAbierto: boolean) => {
-    if (!formularioProducto.nombre.trim()) {
+    if (!formularioProducto.nombre.trim() || guardando) {
       return;
     }
 
-    const ok = await onGuardar(
-      {
-        ...formularioProducto,
-        imagen: imagenSeleccionada,
-      },
-      mantenerAbierto
-    );
+    setGuardando(true);
+    try {
+      await onGuardar(
+        {
+          ...formularioProducto,
+          imagen: imagenSeleccionada,
+        },
+        mantenerAbierto
+      );
 
-    if (ok && mantenerAbierto) {
-      limpiarFormulario();
+      if (!mantenerAbierto) {
+        onCancelar();
+      }
+
+      if (mantenerAbierto) {
+        limpiarFormulario();
+      }
+    } finally {
+      setGuardando(false);
     }
   };
 
@@ -187,12 +197,17 @@ function AgregarProducto({ onGuardar, onCancelar }: AgregarProductoProps) {
           </div>
 
           <div className="inventarioAccionesFormulario">
-            <button className="inventarioBotonGuardar" type="submit">
-              Guardar producto
+            <button className="inventarioBotonGuardar" type="submit" disabled={guardando}>
+              {guardando ? 'Guardando...' : 'Guardar producto'}
             </button>
 
-            <button className="inventarioBotonGuardar" type="button" onClick={() => guardarProducto(true)}>
-              Guardar y añadir otro
+            <button
+              className="inventarioBotonGuardar"
+              type="button"
+              onClick={() => guardarProducto(true)}
+              disabled={guardando}
+            >
+              {guardando ? 'Guardando...' : 'Guardar y añadir otro'}
             </button>
           </div>
         </form>

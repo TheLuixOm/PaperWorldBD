@@ -4,6 +4,8 @@ import { BarChart3, Boxes, Home, ShoppingCart, Truck } from 'lucide-react';
 import clipAzul from '../../../images/Clip_azul.svg';
 import './Empleado.css';
 
+const SIDEBAR_COLAPSADO_KEY = 'paperworld.empleado.sidebarColapsado';
+
 const opcionesMenu = [
   { ruta: '/dashboard', icono: Home, etiqueta: 'Inicio' },
   { ruta: '/inventario', icono: Boxes, etiqueta: 'Inventario' },
@@ -13,7 +15,18 @@ const opcionesMenu = [
 ];
 
 function Empleado() {
-  const [estaColapsado, setEstaColapsado] = useState(false);
+  const [estaColapsado, setEstaColapsado] = useState(() => {
+    if (typeof window === 'undefined') {
+      return true;
+    }
+
+    const valorGuardado = window.localStorage.getItem(SIDEBAR_COLAPSADO_KEY);
+    if (valorGuardado === null) {
+      return true;
+    }
+
+    return valorGuardado === '1';
+  });
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
 
   const esVistaMovil = () => {
@@ -33,21 +46,6 @@ function Empleado() {
     setEstaColapsado((estadoPrevio) => !estadoPrevio);
   };
 
-  const abrirSidebar = () => {
-    if (esVistaMovil()) {
-      setMenuMovilAbierto(false);
-      return;
-    }
-
-    setEstaColapsado(false);
-  };
-
-  const manejarClickSidebar = () => {
-    if (!esVistaMovil()) {
-      setEstaColapsado((estadoPrevio) => !estadoPrevio);
-    }
-  };
-
   useEffect(() => {
     const manejarRedimension = () => {
       if (!esVistaMovil()) {
@@ -61,6 +59,14 @@ function Empleado() {
       window.removeEventListener('resize', manejarRedimension);
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem(SIDEBAR_COLAPSADO_KEY, estaColapsado ? '1' : '0');
+  }, [estaColapsado]);
 
   return (
     <main
@@ -92,7 +98,7 @@ function Empleado() {
         </div>
       </header>
 
-      <aside className="empleadoSidebar" aria-label="Navegacion del empleado" onClick={manejarClickSidebar}>
+      <aside className="empleadoSidebar" aria-label="Navegacion del empleado">
         <div className="empleadoMarca">
           <h1 className="empleadoLogo">Paper world</h1>
           <button
@@ -117,7 +123,6 @@ function Empleado() {
             <NavLink
               key={opcion.ruta}
               to={opcion.ruta}
-              onClick={abrirSidebar}
               className={({ isActive }) =>
                 `empleadoMenuItem ${isActive ? 'empleadoMenuItemActivo' : ''}`
               }
