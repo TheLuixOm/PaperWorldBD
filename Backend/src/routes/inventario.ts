@@ -7,7 +7,6 @@ export const inventarioRouter = Router();
 type ProductoInventario = {
   id_producto: string; // bigint como string
   inventario_id_actualizacion: string; // bigint como string
-  cambios_inv_id_actualizacion: string; // bigint como string
   nombre: string;
   precio: number;
   cantidad: number;
@@ -83,7 +82,6 @@ async function fetchProductoLatest(idProducto: bigint): Promise<ProductoInventar
     select distinct on (p.id_producto)
       p.id_producto::text as id_producto,
       p.inventario_id_actualizacion::text as inventario_id_actualizacion,
-      p.cambios_inv_id_actualizacion::text as cambios_inv_id_actualizacion,
       coalesce(p.nombreproducto, '') as nombre,
       coalesce(p.precio, 0)::float as precio,
       coalesce(p.cantidad, 0) as cantidad,
@@ -92,7 +90,7 @@ async function fetchProductoLatest(idProducto: bigint): Promise<ProductoInventar
       ci.fecha_actualizacion::text as fecha_actualizacion,
       ci.stock_minimo as stock_minimo
     from producto p
-    left join cambios_inv ci on ci.id_actualizacion = p.cambios_inv_id_actualizacion
+    left join cambios_inv ci on ci.id_actualizacion = p.inventario_id_actualizacion
     left join detalle_cat dc
       on dc.producto_id_producto = p.id_producto
     left join categoria c on c.id_categoria = dc.categoria_id_categoria
@@ -112,7 +110,6 @@ async function fetchProductoLatestWithClient(client: PoolClient, idProducto: big
     select distinct on (p.id_producto)
       p.id_producto::text as id_producto,
       p.inventario_id_actualizacion::text as inventario_id_actualizacion,
-      p.cambios_inv_id_actualizacion::text as cambios_inv_id_actualizacion,
       coalesce(p.nombreproducto, '') as nombre,
       coalesce(p.precio, 0)::float as precio,
       coalesce(p.cantidad, 0) as cantidad,
@@ -121,7 +118,7 @@ async function fetchProductoLatestWithClient(client: PoolClient, idProducto: big
       ci.fecha_actualizacion::text as fecha_actualizacion,
       ci.stock_minimo as stock_minimo
     from producto p
-    left join cambios_inv ci on ci.id_actualizacion = p.cambios_inv_id_actualizacion
+    left join cambios_inv ci on ci.id_actualizacion = p.inventario_id_actualizacion
     left join detalle_cat dc
       on dc.producto_id_producto = p.id_producto
     left join categoria c on c.id_categoria = dc.categoria_id_categoria
@@ -167,7 +164,6 @@ inventarioRouter.get('/', async (req, res, next) => {
       select distinct on (p.id_producto)
         p.id_producto::text as id_producto,
         p.inventario_id_actualizacion::text as inventario_id_actualizacion,
-        p.cambios_inv_id_actualizacion::text as cambios_inv_id_actualizacion,
         coalesce(p.nombreproducto, '') as nombre,
         coalesce(p.precio, 0)::float as precio,
         coalesce(p.cantidad, 0) as cantidad,
@@ -176,7 +172,7 @@ inventarioRouter.get('/', async (req, res, next) => {
         ci.fecha_actualizacion::text as fecha_actualizacion,
         ci.stock_minimo as stock_minimo
       from producto p
-      left join cambios_inv ci on ci.id_actualizacion = p.cambios_inv_id_actualizacion
+      left join cambios_inv ci on ci.id_actualizacion = p.inventario_id_actualizacion
       left join detalle_cat dc
         on dc.producto_id_producto = p.id_producto
       left join categoria c on c.id_categoria = dc.categoria_id_categoria
@@ -261,16 +257,15 @@ inventarioRouter.post('/', async (req, res, next) => {
 
       await client.query(
         `insert into producto
-          (id_producto, nombreproducto, precio, imagen, cantidad, inventario_id_actualizacion, cambios_inv_id_actualizacion)
+          (id_producto, nombreproducto, precio, imagen, cantidad, inventario_id_actualizacion)
          values
-          ($1, $2, $3, $4, $5, $6, $7)`,
+          ($1, $2, $3, $4, $5, $6)`,
         [
           idProducto.toString(),
           nombre,
           precio,
           imagen,
           cantidad,
-          idActualizacion.toString(),
           idActualizacion.toString(),
         ],
       );
@@ -337,10 +332,8 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
     const updated = await withTransaction(async (client) => {
       const latest = await client.query<{
         inventario_id_actualizacion: string;
-        cambios_inv_id_actualizacion: string;
       }>(
         `select inventario_id_actualizacion::text as inventario_id_actualizacion,
-                cambios_inv_id_actualizacion::text as cambios_inv_id_actualizacion
          from producto
          where id_producto = $1
          order by inventario_id_actualizacion desc
@@ -353,7 +346,6 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
       }
 
       const invId = BigInt(latest.rows[0]!.inventario_id_actualizacion);
-      const cambiosId = BigInt(latest.rows[0]!.cambios_inv_id_actualizacion);
 
       await client.query(
         `update producto
@@ -368,11 +360,11 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
       if (stock_minimo !== null) {
         await client.query(
           'update cambios_inv set fecha_actualizacion = now(), stock_minimo = $1 where id_actualizacion = $2',
-          [stock_minimo, cambiosId.toString()],
+          [stock_minimo, invId.toString()],
         );
       } else {
         await client.query('update cambios_inv set fecha_actualizacion = now() where id_actualizacion = $1', [
-          cambiosId.toString(),
+          invId.toString(),
         ]);
       }
 
@@ -412,10 +404,8 @@ inventarioRouter.delete('/:idProducto', async (req, res, next) => {
     const result = await withTransaction(async (client) => {
       const latest = await client.query<{
         inventario_id_actualizacion: string;
-        cambios_inv_id_actualizacion: string;
       }>(
         `select inventario_id_actualizacion::text as inventario_id_actualizacion,
-                cambios_inv_id_actualizacion::text as cambios_inv_id_actualizacion
          from producto
          where id_producto = $1
          order by inventario_id_actualizacion desc
@@ -428,7 +418,6 @@ inventarioRouter.delete('/:idProducto', async (req, res, next) => {
       }
 
       const invId = BigInt(latest.rows[0]!.inventario_id_actualizacion);
-      const cambiosId = BigInt(latest.rows[0]!.cambios_inv_id_actualizacion);
 
       // Limpieza de relaciones "propias" del inventario
       await client.query('delete from detalle_cat where producto_id_producto = $1', [idProducto.toString()]);
@@ -449,8 +438,8 @@ inventarioRouter.delete('/:idProducto', async (req, res, next) => {
 
       // borra cambios_inv si nadie más lo usa
       await client.query(
-        'delete from cambios_inv ci where ci.id_actualizacion = $1 and not exists (select 1 from producto p where p.cambios_inv_id_actualizacion = $1)',
-        [cambiosId.toString()],
+        'delete from cambios_inv ci where ci.id_actualizacion = $1 and not exists (select 1 from producto p where p.inventario_id_actualizacion = $1)',
+        [invId.toString()],
       );
 
       return { ok: true as const, status: 204 as const };

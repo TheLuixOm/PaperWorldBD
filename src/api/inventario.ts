@@ -1,7 +1,6 @@
 export type InventarioApiItem = {
   id_producto: string;
   inventario_id_actualizacion: string;
-  cambios_inv_id_actualizacion: string;
   nombre: string;
   precio: number;
   cantidad: number;
