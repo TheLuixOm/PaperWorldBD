@@ -79,7 +79,7 @@ async function ensureCategoria(client: PoolClient, nombre: string): Promise<bigi
 async function fetchProductoLatest(idProducto: bigint): Promise<ProductoInventario | null> {
   const result = await query<ProductoInventario>(
     `
-    select distinct on (p.id_producto)
+    select
       p.id_producto::text as id_producto,
       p.inventario_id_actualizacion::text as inventario_id_actualizacion,
       coalesce(p.nombreproducto, '') as nombre,
@@ -95,7 +95,6 @@ async function fetchProductoLatest(idProducto: bigint): Promise<ProductoInventar
       on dc.producto_id_producto = p.id_producto
     left join categoria c on c.id_categoria = dc.categoria_id_categoria
     where p.id_producto = $1
-    order by p.id_producto asc, p.inventario_id_actualizacion desc
     limit 1
     `,
     [idProducto.toString()],
@@ -107,7 +106,7 @@ async function fetchProductoLatest(idProducto: bigint): Promise<ProductoInventar
 async function fetchProductoLatestWithClient(client: PoolClient, idProducto: bigint): Promise<ProductoInventario | null> {
   const result = await client.query<ProductoInventario>(
     `
-    select distinct on (p.id_producto)
+    select
       p.id_producto::text as id_producto,
       p.inventario_id_actualizacion::text as inventario_id_actualizacion,
       coalesce(p.nombreproducto, '') as nombre,
@@ -123,7 +122,6 @@ async function fetchProductoLatestWithClient(client: PoolClient, idProducto: big
       on dc.producto_id_producto = p.id_producto
     left join categoria c on c.id_categoria = dc.categoria_id_categoria
     where p.id_producto = $1
-    order by p.id_producto asc, p.inventario_id_actualizacion desc
     limit 1
     `,
     [idProducto.toString()],
@@ -270,6 +268,15 @@ inventarioRouter.post('/', async (req, res, next) => {
         ],
       );
 
+      // Registrar un movimiento inicial si arranca con stock.
+      if (cantidad > 0) {
+        await client.query(
+          `insert into reportes (fecha, tipo, inventario_id_actualizacion)
+           values (now(), 'inventario_agregado', $1)`,
+          [idActualizacion.toString()],
+        );
+      }
+
       if (categoria) {
         const categoriaId = await ensureCategoria(client, categoria);
         await client.query(
@@ -330,14 +337,13 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
     const stock_minimo = stockMinimoRaw >= 0 ? stockMinimoRaw : null;
 
     const updated = await withTransaction(async (client) => {
-      const latest = await client.query<{
-        inventario_id_actualizacion: string;
-      }>(
-        `select inventario_id_actualizacion::text as inventario_id_actualizacion,
+      const latest = await client.query<{ inventario_id_actualizacion: string; cantidad: number }>(
+        `select
+           inventario_id_actualizacion::text as inventario_id_actualizacion,
+           coalesce(cantidad, 0) as cantidad
          from producto
          where id_producto = $1
-         order by inventario_id_actualizacion desc
-         limit 1`,
+         for update`,
         [idProducto.toString()],
       );
 
@@ -346,6 +352,9 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
       }
 
       const invId = BigInt(latest.rows[0]!.inventario_id_actualizacion);
+      const cantidadAntes = Number.isFinite(latest.rows[0]!.cantidad) ? Math.trunc(latest.rows[0]!.cantidad) : 0;
+      const cantidadDespues = Math.trunc(cantidad);
+      const deltaCantidad = cantidadDespues - cantidadAntes;
 
       await client.query(
         `update producto
@@ -353,19 +362,32 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
              precio = $2,
              imagen = $3,
              cantidad = $4
-         where id_producto = $5 and inventario_id_actualizacion = $6`,
-        [nombre, precio, imagen, Math.trunc(cantidad), idProducto.toString(), invId.toString()],
+         where id_producto = $5`,
+        [nombre, precio, imagen, cantidadDespues, idProducto.toString()],
       );
 
-      if (stock_minimo !== null) {
+      // Solo marcamos el inventario como "cambio reciente" si cambió stock o el mínimo.
+      if (deltaCantidad !== 0 || stock_minimo !== null) {
+        if (stock_minimo !== null) {
+          await client.query(
+            'update cambios_inv set fecha_actualizacion = now(), stock_minimo = $1 where id_actualizacion = $2',
+            [stock_minimo, invId.toString()],
+          );
+        } else {
+          await client.query('update cambios_inv set fecha_actualizacion = now() where id_actualizacion = $1', [
+            invId.toString(),
+          ]);
+        }
+      }
+
+      // Registrar el movimiento para que el reporte pueda mostrar + / - correctamente.
+      if (deltaCantidad !== 0) {
+        const tipo = deltaCantidad > 0 ? 'inventario_agregado' : 'inventario_eliminado';
         await client.query(
-          'update cambios_inv set fecha_actualizacion = now(), stock_minimo = $1 where id_actualizacion = $2',
-          [stock_minimo, invId.toString()],
+          `insert into reportes (fecha, tipo, inventario_id_actualizacion)
+           values (now(), $1, $2)`,
+          [tipo, invId.toString()],
         );
-      } else {
-        await client.query('update cambios_inv set fecha_actualizacion = now() where id_actualizacion = $1', [
-          invId.toString(),
-        ]);
       }
 
       if (categoria) {
@@ -402,14 +424,11 @@ inventarioRouter.delete('/:idProducto', async (req, res, next) => {
     }
 
     const result = await withTransaction(async (client) => {
-      const latest = await client.query<{
-        inventario_id_actualizacion: string;
-      }>(
-        `select inventario_id_actualizacion::text as inventario_id_actualizacion,
+      const latest = await client.query<{ inventario_id_actualizacion: string }>(
+        `select inventario_id_actualizacion::text as inventario_id_actualizacion
          from producto
          where id_producto = $1
-         order by inventario_id_actualizacion desc
-         limit 1`,
+         for update`,
         [idProducto.toString()],
       );
 
@@ -424,10 +443,7 @@ inventarioRouter.delete('/:idProducto', async (req, res, next) => {
       await client.query('delete from detalles_proveedor where producto_id_producto = $1', [idProducto.toString()]);
 
       try {
-        await client.query('delete from producto where id_producto = $1 and inventario_id_actualizacion = $2', [
-          idProducto.toString(),
-          invId.toString(),
-        ]);
+        await client.query('delete from producto where id_producto = $1', [idProducto.toString()]);
       } catch (err) {
         // FK violation (por ejemplo, si ya está en lista_productos o detalle_factura)
         if (err && typeof err === 'object' && 'code' in err && (err as { code?: unknown }).code === '23503') {

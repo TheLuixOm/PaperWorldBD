@@ -16,6 +16,17 @@ export type ReportePedidoItem = {
   estado: 'Pendiente' | 'En preparación' | 'Listo';
 };
 
+export type ReporteInventarioItem = {
+  id: string;
+  producto: string;
+  categoria: string;
+  stock: number;
+  minimo: number;
+  ultimoCambio: string;
+  tipo: 'Stock bajo' | 'Cambio reciente';
+  movimiento?: 'Agregado' | 'Eliminado';
+};
+
 type ReporteVentasResponse = {
   items: ReporteVentaItem[];
   limit: number;
@@ -24,6 +35,12 @@ type ReporteVentasResponse = {
 
 type ReportePedidosResponse = {
   items: ReportePedidoItem[];
+  limit: number;
+  offset: number;
+};
+
+type ReporteInventarioResponse = {
+  items: ReporteInventarioItem[];
   limit: number;
   offset: number;
 };
@@ -73,9 +90,19 @@ export async function listarReportePedidos(params?: { limit?: number; offset?: n
   return apiFetch<ReportePedidosResponse>(url);
 }
 
+export async function listarReporteInventario(params?: { limit?: number; offset?: number }) {
+  const qs = new URLSearchParams();
+  if (typeof params?.limit === 'number') qs.set('limit', String(params.limit));
+  if (typeof params?.offset === 'number') qs.set('offset', String(params.offset));
+
+  const url = `/api/reportes/inventario${qs.size ? `?${qs.toString()}` : ''}`;
+  return apiFetch<ReporteInventarioResponse>(url);
+}
+
 export async function finalizarPedido(idPedido: string) {
   const cleaned = (idPedido ?? '').toString();
-  const digits = cleaned.replace(/[^0-9-]/g, '');
+  // "P-2" => "2" (evita interpretar el guion como signo negativo)
+  const digits = cleaned.replace(/[^0-9]/g, '');
   const id = digits || cleaned;
   return apiFetch<{ ok: true; id: string }>(`/api/reportes/pedidos/${id}/finalizar`, {
     method: 'POST',
