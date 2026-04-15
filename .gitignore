@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Documentación local / entregables (no versionar)
+ANALISIS_SISTEMAS.md
+
 # Env files (no subir secretos)
 .env
 .env.*

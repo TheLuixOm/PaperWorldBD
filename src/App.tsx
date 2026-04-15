@@ -20,6 +20,8 @@ import CarritoCliente from './paginas/cliente/carrito/Carrito'
 import CarritoMov from './paginas/cliente/carrito/CarritoMov.tsx'
 import Ventas_Esc from './paginas/empleado/Ventas/Ventas_Esc.tsx'
 import Ventas_mov from './paginas/empleado/Ventas/Ventas_mov.tsx'
+import RecuperarClaveEsc from './paginas/recuperar/RecuperarClave'
+import RecuperarClaveMov from './paginas/recuperar/RecuperarClaveMov'
 
 const puntoCorteMovil = 500
 
@@ -110,6 +112,7 @@ function Aplicacion() {
   const elementoRegistro = esMovil ? <RegistroMov /> : <RegistroEsc />
   const elementoCarritoCliente = esMovil ? <CarritoMov /> : <CarritoCliente />
   const elementoVentasEmpleado = esMovil ? <Ventas_mov /> : <Ventas_Esc />
+  const elementoRecuperarClave = esMovil ? <RecuperarClaveMov /> : <RecuperarClaveEsc />
 
   const destinoFallback = useMemo(() => {
     const tipo = getUserType()
@@ -122,6 +125,8 @@ function Aplicacion() {
     <Routes>
       <Route path="/" element={elementoInicioSesion} />
       <Route path="/login" element={elementoInicioSesion} />
+
+      <Route path="/recuperar-clave" element={elementoRecuperarClave} />
 
       <Route path="/registro" element={elementoRegistro} />
       <Route path="/register" element={elementoRegistro} />

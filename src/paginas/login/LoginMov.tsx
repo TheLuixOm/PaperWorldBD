@@ -124,7 +124,7 @@ function LoginMov({ onIrRegistro }: LoginMovProps) {
             </button>
           </div>
 
-          <button type="button" className="login-mov-forgot">
+          <button type="button" className="login-mov-forgot" onClick={() => navigate('/recuperar-clave')}>
             ¿Olvido su contraseña?
           </button>
 

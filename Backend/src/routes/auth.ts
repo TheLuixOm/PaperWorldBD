@@ -8,6 +8,11 @@ import { withTransaction } from '../db/query.js';
 export const authRouter = Router();
 
 
+function normalizarTelefono(telefono: unknown) {
+  return String(telefono ?? '').trim().replace(/[^0-9]/g, '');
+}
+
+
 async function getRoles(client: PoolClient, userId: number): Promise<string[]> {
   const result = await client.query<{ tipo_rol: string }>(
     `SELECT ru.tipo_rol
@@ -84,5 +89,82 @@ authRouter.post('/login', async (req, res, next) => {
 
   } catch (err) {
     next(err); 
+  }
+});
+
+
+// Recuperación de contraseña (simple): teléfono -> nueva clave
+// Nota: este método se implementa así porque fue el flujo solicitado para el proyecto.
+authRouter.post('/password-reset/verify-phone', async (req, res, next) => {
+  try {
+    const telefonoDigits = normalizarTelefono(req.body?.telefono);
+    if (!telefonoDigits) {
+      return res.status(400).json({ ok: false, error: 'Faltan datos', detail: 'telefono requerido' });
+    }
+
+    const result = await withTransaction(async (client) => {
+      const found = await client.query<{ id_usuario: number }>(
+        `SELECT u.id_usuario
+         FROM usuario u
+         JOIN credenciales c ON c.usuario_id_usuario = u.id_usuario
+         WHERE regexp_replace(coalesce(u.telefono, ''), '[^0-9]', '', 'g') = $1
+         LIMIT 1`,
+        [telefonoDigits],
+      );
+
+      return { ok: (found.rowCount ?? 0) > 0 };
+    });
+
+    return res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+authRouter.post('/password-reset/reset', async (req, res, next) => {
+  try {
+    const telefonoDigits = normalizarTelefono(req.body?.telefono);
+    const nuevaClave = String(req.body?.nuevaClave ?? '').trim();
+
+    if (!telefonoDigits || !nuevaClave) {
+      return res.status(400).json({ ok: false, error: 'Faltan datos', detail: 'telefono y nuevaClave requeridos' });
+    }
+
+    if (nuevaClave.length < 6) {
+      return res.status(400).json({ ok: false, error: 'ClaveInvalida', detail: 'min 6 caracteres' });
+    }
+
+    const hash = await bcrypt.hash(nuevaClave, 10);
+
+    const result = await withTransaction(async (client) => {
+      const found = await client.query<{ id_usuario: number }>(
+        `SELECT u.id_usuario
+         FROM usuario u
+         JOIN credenciales c ON c.usuario_id_usuario = u.id_usuario
+         WHERE regexp_replace(coalesce(u.telefono, ''), '[^0-9]', '', 'g') = $1
+         LIMIT 1
+         FOR UPDATE`,
+        [telefonoDigits],
+      );
+
+      if ((found.rowCount ?? 0) === 0) {
+        return { ok: false };
+      }
+
+      const userId = found.rows[0].id_usuario;
+
+      await client.query('UPDATE credenciales SET clave = $1 WHERE usuario_id_usuario = $2', [hash, userId]);
+
+      return { ok: true };
+    });
+
+    if (!result.ok) {
+      return res.status(404).json({ ok: false, error: 'TelefonoNoEncontrado' });
+    }
+
+    return res.json({ ok: true });
+  } catch (err) {
+    next(err);
   }
 });

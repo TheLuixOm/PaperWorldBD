@@ -183,7 +183,7 @@ function LoginEsc() {
 							</button>
 						</div>
 
-						<button type="button" className="login-esc-olvido">
+						<button type="button" className="login-esc-olvido" onClick={() => navigate('/recuperar-clave')}>
 							¿Olvido su contraseña?
 						</button>
 
