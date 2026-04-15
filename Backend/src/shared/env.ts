@@ -15,9 +15,11 @@ export const env = {
   PGDATABASE: process.env.PGDATABASE,
   JWT_SECRET: process.env.JWT_SECRET ?? '',
   CORS_ORIGIN: process.env.CORS_ORIGIN ?? '',
+  SUPABASE_URL: process.env.SUPABASE_URL ?? '',
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
+  SUPABASE_BUCKET: process.env.SUPABASE_BUCKET ?? 'fotos_paperworld',
 } as const;
 
 if (!env.JWT_SECRET) {
-  // eslint-disable-next-line no-console
   console.warn('[backend] JWT_SECRET vacío. Configúralo en Backend/.env');
 }

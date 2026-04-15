@@ -89,6 +89,9 @@ export async function crearProductoInventario(input: {
   precio: number;
   cantidad: number;
   imagen?: string;
+  imagen_base64?: string;
+  imagen_mime?: string;
+  imagen_nombre?: string;
   stock_minimo?: number;
 }) {
   const idDigits = input.referencia ? extractIdDigits(input.referencia) : '';
@@ -99,6 +102,9 @@ export async function crearProductoInventario(input: {
     precio: input.precio,
     cantidad: input.cantidad,
     imagen: input.imagen ?? '',
+    imagen_base64: input.imagen_base64 ?? '',
+    imagen_mime: input.imagen_mime ?? '',
+    imagen_nombre: input.imagen_nombre ?? '',
     stock_minimo: typeof input.stock_minimo === 'number' ? input.stock_minimo : undefined,
   };
 

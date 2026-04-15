@@ -1,8 +1,14 @@
 import { Router } from 'express';
 import type { PoolClient } from 'pg';
 import { query, withTransaction } from '../db/query.js';
+import { createClient } from '@supabase/supabase-js';
+import { env } from '../shared/env.js';
 
 export const inventarioRouter = Router();
+
+const supabase = env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
+  : null;
 
 type ProductoInventario = {
   id_producto: string; // bigint como string
@@ -206,8 +212,6 @@ inventarioRouter.get('/:idProducto', async (req, res, next) => {
   }
 });
 
-// POST /api/inventario
-// Crea producto + un registro en cambios_inv (y opcionalmente categoría)
 inventarioRouter.post('/', async (req, res, next) => {
   try {
     const body = req.body as Partial<{
@@ -215,6 +219,9 @@ inventarioRouter.post('/', async (req, res, next) => {
       nombre: unknown;
       precio: unknown;
       imagen: unknown;
+      imagen_base64: unknown;
+      imagen_mime: unknown;
+      imagen_nombre: unknown;
       cantidad: unknown;
       categoria: unknown;
       stock_minimo: unknown;
@@ -232,6 +239,9 @@ inventarioRouter.post('/', async (req, res, next) => {
 
     const cantidad = Math.max(0, parseIntSafe(body.cantidad, 0));
     const imagen = typeof body.imagen === 'string' ? body.imagen.trim() : '';
+    const imagenBase64 = typeof body.imagen_base64 === 'string' ? body.imagen_base64.trim() : '';
+    const imagenMime = typeof body.imagen_mime === 'string' ? body.imagen_mime.trim().toLowerCase() : '';
+    const imagenNombre = typeof body.imagen_nombre === 'string' ? body.imagen_nombre.trim() : '';
     const categoria = typeof body.categoria === 'string' ? body.categoria.trim() : '';
 
     const stockMinimoRaw = parseIntSafe(body.stock_minimo, -1);
@@ -253,6 +263,51 @@ inventarioRouter.post('/', async (req, res, next) => {
         idProducto = BigInt(nextId.rows[0]!.next_id);
       }
 
+      let imagenFinal = imagen;
+      if (imagenBase64) {
+        if (!supabase) {
+          throw new Error('Supabase no configurado. Define SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en Backend/.env');
+        }
+
+        const extensionByMime: Record<string, string> = {
+          'image/jpeg': 'jpg',
+          'image/jpg': 'jpg',
+          'image/png': 'png',
+          'image/webp': 'webp',
+          'image/gif': 'gif',
+          'image/svg+xml': 'svg',
+        };
+
+        const extFromName = imagenNombre.includes('.')
+          ? (imagenNombre.split('.').pop() ?? '').toLowerCase()
+          : '';
+        const extension = extFromName || extensionByMime[imagenMime] || 'bin';
+        const filePath = `${idProducto.toString()}.${extension}`;
+        const bytes = Buffer.from(imagenBase64, 'base64');
+
+        const { error: uploadError } = await supabase.storage
+          .from(env.SUPABASE_BUCKET)
+          .upload(filePath, bytes, {
+            contentType: imagenMime || 'application/octet-stream',
+            upsert: true,
+            cacheControl: '31536000',
+          });
+
+        if (uploadError) {
+          throw new Error(`Error subiendo imagen a Supabase: ${uploadError.message}`);
+        }
+
+        const { data: publicData } = supabase.storage
+          .from(env.SUPABASE_BUCKET)
+          .getPublicUrl(filePath);
+
+        if (!publicData?.publicUrl) {
+          throw new Error('No se pudo obtener URL publica de la imagen en Supabase');
+        }
+
+        imagenFinal = publicData.publicUrl;
+      }
+
       await client.query(
         `insert into producto
           (id_producto, nombreproducto, precio, imagen, cantidad, inventario_id_actualizacion)
@@ -262,7 +317,7 @@ inventarioRouter.post('/', async (req, res, next) => {
           idProducto.toString(),
           nombre,
           precio,
-          imagen,
+          imagenFinal,
           cantidad,
           idActualizacion.toString(),
         ],

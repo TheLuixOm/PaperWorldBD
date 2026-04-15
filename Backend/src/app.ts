@@ -15,10 +15,9 @@ export function buildApp() {
   const app = express();
 
   app.disable('x-powered-by');
-  app.use(express.json({ limit: '1mb' }));
+  app.use(express.json({ limit: '5mb' }));
 
-  // Si usas proxy de Vite (recomendado), esto es opcional.
-  // Igual lo dejamos configurable por si luego consumes la API sin proxy.
+
   if (env.CORS_ORIGIN) {
     app.use(
       cors({
@@ -52,6 +51,18 @@ export function buildApp() {
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     // eslint-disable-next-line no-console
     console.error('[backend] unhandled error', err);
+
+    if (
+      err &&
+      typeof err === 'object' &&
+      'type' in err &&
+      (err as { type?: unknown }).type === 'entity.too.large'
+    ) {
+      return res.status(413).json({
+        error: 'PayloadTooLarge',
+        detail: 'El cuerpo de la solicitud supera el límite permitido. Intenta con una imagen más pequeña.',
+      });
+    }
 
     const isProd = process.env.NODE_ENV === 'production';
     if (isProd) {
