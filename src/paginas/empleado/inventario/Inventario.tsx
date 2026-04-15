@@ -229,6 +229,25 @@ function Inventario() {
             const cantidad = Number.parseInt(datosFormulario.cantidad, 10);
             const imagen = datosFormulario.imagen?.startsWith('blob:') ? '' : datosFormulario.imagen;
 
+            const imagenBase64 = await new Promise<string>((resolve, reject) => {
+                const archivo = datosFormulario.imagenArchivo;
+                if (!archivo) {
+                    resolve('');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const value = typeof reader.result === 'string' ? reader.result : '';
+                    const commaIndex = value.indexOf(',');
+                    resolve(commaIndex >= 0 ? value.slice(commaIndex + 1) : value);
+                };
+                reader.onerror = () => {
+                    reject(new Error('No se pudo leer la imagen seleccionada'));
+                };
+                reader.readAsDataURL(archivo);
+            });
+
             const productoCreado = await crearProductoInventario({
                 referencia: datosFormulario.referencia,
                 nombre: datosFormulario.nombre.trim() || 'Producto sin nombre',
@@ -236,6 +255,9 @@ function Inventario() {
                 precio,
                 cantidad: Number.isNaN(cantidad) ? 0 : cantidad,
                 imagen,
+                imagen_base64: imagenBase64,
+                imagen_mime: datosFormulario.imagenMime,
+                imagen_nombre: datosFormulario.imagenNombre,
             });
 
             if (productoCreado.item) {

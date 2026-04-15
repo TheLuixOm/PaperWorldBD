@@ -12,6 +12,9 @@ type DatosFormulario = {
 
 export type DatosAgregarProducto = DatosFormulario & {
   imagen: string;
+  imagenArchivo: File | null;
+  imagenMime: string;
+  imagenNombre: string;
 };
 
 type AgregarProductoProps = {
@@ -31,6 +34,7 @@ const formularioVacio: DatosFormulario = {
 function AgregarProducto({ onGuardar, onCancelar }: AgregarProductoProps) {
   const [formularioProducto, setFormularioProducto] = useState<DatosFormulario>(formularioVacio);
   const [imagenSeleccionada, setImagenSeleccionada] = useState('');
+  const [archivoImagen, setArchivoImagen] = useState<File | null>(null);
   const [guardando, setGuardando] = useState(false);
   const inputImagenRef = useRef<HTMLInputElement | null>(null);
 
@@ -57,6 +61,7 @@ function AgregarProducto({ onGuardar, onCancelar }: AgregarProductoProps) {
     }
 
     setImagenSeleccionada('');
+    setArchivoImagen(null);
 
     if (inputImagenRef.current) {
       inputImagenRef.current.value = '';
@@ -76,6 +81,7 @@ function AgregarProducto({ onGuardar, onCancelar }: AgregarProductoProps) {
 
     const urlTemporal = URL.createObjectURL(archivo);
     setImagenSeleccionada(urlTemporal);
+    setArchivoImagen(archivo);
   };
 
   const guardarProducto = async (mantenerAbierto: boolean) => {
@@ -89,6 +95,9 @@ function AgregarProducto({ onGuardar, onCancelar }: AgregarProductoProps) {
         {
           ...formularioProducto,
           imagen: imagenSeleccionada,
+          imagenArchivo: archivoImagen,
+          imagenMime: archivoImagen?.type ?? '',
+          imagenNombre: archivoImagen?.name ?? '',
         },
         mantenerAbierto
       );
