@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 import './Inventario.css';
-import type { Producto } from '../datosInventario';
 import UsuarioMenu from '../Barras/UsuarioMenu';
 import AgregarProducto, { type DatosAgregarProducto } from './AgregarProducto';
 import ModificarProducto from './ModificarProducto';
@@ -15,6 +14,16 @@ import {
     listarInventario,
     parsePrecioInput,
 } from '../../../api/inventario';
+
+type Producto = {
+    id: string;
+    nombre: string;
+    categoria: string;
+    precio: string;
+    cantidad: number;
+    vendidos: number;
+    imagen: string;
+};
 
 function mapearProductoDesdeApi(it: {
     id_producto: string;

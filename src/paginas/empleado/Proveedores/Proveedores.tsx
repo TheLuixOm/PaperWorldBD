@@ -3,13 +3,38 @@ import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../inventario/Inventario.css';
 import './Proveedores.css';
-import { proveedoresIniciales } from '../datosInventario';
 import UsuarioMenu from '../Barras/UsuarioMenu';
+import {
+  eliminarProveedor,
+  formatProveedorIdDisplay,
+  listarProveedores,
+  type ProveedorApiItem,
+} from '../../../api/proveedores';
+
+type Proveedor = {
+  id: string;
+  nombre: string;
+  email: string;
+  contacto: string;
+};
+
+function mapearProveedorDesdeApi(item: ProveedorApiItem): Proveedor {
+  const id = formatProveedorIdDisplay(item.id_proveedor);
+
+  return {
+    id,
+    nombre: item.nombre || 'Proveedor sin nombre',
+    email: item.correo || '',
+    contacto: item.telefono || '',
+  };
+}
 
 function Proveedores() {
   const [textoBusqueda, setTextoBusqueda] = useState('');
-  const [proveedores, setProveedores] = useState(proveedoresIniciales);
-  const [proveedorPendienteEliminar, setProveedorPendienteEliminar] = useState<(typeof proveedoresIniciales)[number] | null>(null);
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState<string | null>(null);
+  const [proveedorPendienteEliminar, setProveedorPendienteEliminar] = useState<Proveedor | null>(null);
   const [proveedorMenuAbiertoId, setProveedorMenuAbiertoId] = useState<string | null>(null);
   const [paginaActual, setPaginaActual] = useState(1);
   const [proveedorExpandidoId, setProveedorExpandidoId] = useState<string | null>(null);
@@ -17,6 +42,27 @@ function Proveedores() {
   const inputBusquedaRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
   const proveedoresPorPagina = 8;
+
+  const cargarProveedores = async () => {
+    setCargando(true);
+    setErrorCarga(null);
+
+    try {
+      const resp = await listarProveedores({ limit: 500, offset: 0 });
+      setProveedores(resp.items.map(mapearProveedorDesdeApi));
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[proveedores] no se pudo cargar desde API', err);
+      setProveedores([]);
+      setErrorCarga('No se pudo cargar los proveedores desde la base de datos.');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => {
+    void cargarProveedores();
+  }, []);
 
   const abrirVistaModificarProveedor = (id: string) => {
     setProveedorMenuAbiertoId(null);
@@ -31,7 +77,7 @@ function Proveedores() {
     });
   };
 
-  const solicitarEliminarProveedor = (proveedor: (typeof proveedoresIniciales)[number]) => {
+  const solicitarEliminarProveedor = (proveedor: Proveedor) => {
     setProveedorMenuAbiertoId(null);
     setProveedorPendienteEliminar(proveedor);
   };
@@ -41,10 +87,19 @@ function Proveedores() {
       return;
     }
 
-    setProveedores((proveedoresActuales) =>
-      proveedoresActuales.filter((proveedor) => proveedor.id !== proveedorPendienteEliminar.id),
-    );
+    const proveedorAEliminar = proveedorPendienteEliminar;
     setProveedorPendienteEliminar(null);
+
+    void (async () => {
+      try {
+        await eliminarProveedor(proveedorAEliminar.id);
+        await cargarProveedores();
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[proveedores] no se pudo eliminar en API', err);
+        setErrorCarga('No se pudo eliminar el proveedor en la base de datos.');
+      }
+    })();
   };
 
   const cancelarEliminarProveedor = () => {
@@ -154,6 +209,10 @@ function Proveedores() {
       <section className="inventarioPanel">
         <h3 className="inventarioSubtitulo">Lista de proveedores:</h3>
 
+        {cargando ? <p>Cargando proveedores...</p> : null}
+        {errorCarga ? <p>{errorCarga}</p> : null}
+        {!cargando && proveedores.length === 0 ? <p>No hay proveedores registrados.</p> : null}
+
         <div className="inventarioTablaContenedor">
           <table className="inventarioTabla">
             <thead>
@@ -162,7 +221,6 @@ function Proveedores() {
                 <th>Id</th>
                 <th>Email</th>
                 <th>Contacto</th>
-                <th>Logo</th>
                 <th></th>
               </tr>
             </thead>
@@ -188,9 +246,6 @@ function Proveedores() {
                   <td>{proveedor.id}</td>
                   <td>{proveedor.email}</td>
                   <td>{proveedor.contacto}</td>
-                  <td>
-                    <img className="inventarioImagen" src={proveedor.logo} alt={proveedor.nombre} />
-                  </td>
                   <td>
                     <button
                       className="inventarioAccion inventarioAccionEliminar"

@@ -116,6 +116,93 @@ reportesRouter.get('/pedidos', async (req, res, next) => {
   }
 });
 
+reportesRouter.get('/inventario', async (req, res, next) => {
+  try {
+    const limitRaw = typeof req.query.limit === 'string' ? Number(req.query.limit) : 200;
+    const offsetRaw = typeof req.query.offset === 'string' ? Number(req.query.offset) : 0;
+
+    const limit = Number.isFinite(limitRaw) ? Math.min(500, Math.max(1, Math.floor(limitRaw))) : 200;
+    const offset = Number.isFinite(offsetRaw) ? Math.max(0, Math.floor(offsetRaw)) : 0;
+
+    // Por defecto: consideramos "cambio reciente" en últimos 7 días.
+    const result = await query<{
+      id_producto: string;
+      producto: string;
+      categoria: string;
+      stock: number;
+      minimo: number | null;
+      ultimo_cambio: string | null;
+      tipo: 'Stock bajo' | 'Cambio reciente';
+      movimiento: 'Agregado' | 'Eliminado' | null;
+    }>(
+      `
+      select
+        p.id_producto::text as id_producto,
+        coalesce(p.nombreproducto, '') as producto,
+        coalesce(c.nombrecategoria, '') as categoria,
+        coalesce(p.cantidad, 0) as stock,
+        ci.stock_minimo as minimo,
+        ci.fecha_actualizacion::text as ultimo_cambio,
+        case
+          when ci.stock_minimo is not null and coalesce(p.cantidad, 0) <= ci.stock_minimo then 'Stock bajo'
+          when ci.fecha_actualizacion is not null and ci.fecha_actualizacion >= (now() - interval '7 days') then 'Cambio reciente'
+          else null
+        end as tipo,
+        case
+          when rm.tipo = 'inventario_eliminado' then 'Eliminado'
+          when rm.tipo = 'inventario_agregado' then 'Agregado'
+          else null
+        end as movimiento
+      from producto p
+      left join cambios_inv ci on ci.id_actualizacion = p.inventario_id_actualizacion
+      left join detalle_cat dc on dc.producto_id_producto = p.id_producto
+      left join categoria c on c.id_categoria = dc.categoria_id_categoria
+      left join lateral (
+        select r.tipo
+        from reportes r
+        where r.inventario_id_actualizacion = p.inventario_id_actualizacion
+          and r.tipo in ('inventario_agregado', 'inventario_eliminado')
+        order by r.fecha desc
+        limit 1
+      ) rm on true
+      where (
+        (ci.stock_minimo is not null and coalesce(p.cantidad, 0) <= ci.stock_minimo)
+        or (ci.fecha_actualizacion is not null and ci.fecha_actualizacion >= (now() - interval '7 days'))
+      )
+      order by
+        case
+          when ci.stock_minimo is not null and coalesce(p.cantidad, 0) <= ci.stock_minimo then 0
+          else 1
+        end asc,
+        ci.fecha_actualizacion desc nulls last,
+        p.id_producto asc
+      limit $1 offset $2
+      `,
+      [limit, offset],
+    );
+
+    const items = result.rows
+      .filter((r) => r.tipo === 'Stock bajo' || r.tipo === 'Cambio reciente')
+      .map((r) => {
+        const fecha = r.ultimo_cambio ? new Date(r.ultimo_cambio) : null;
+        return {
+          id: `I-${r.id_producto}`,
+          producto: r.producto,
+          categoria: r.categoria,
+          stock: Number.isFinite(r.stock) ? r.stock : 0,
+          minimo: r.minimo != null && Number.isFinite(r.minimo) ? r.minimo : 0,
+          ultimoCambio: fecha ? toFechaDDMMYYYY(fecha) : '',
+          tipo: r.tipo,
+          movimiento: r.movimiento ?? undefined,
+        };
+      });
+
+    res.json({ items, limit, offset });
+  } catch (err) {
+    next(err);
+  }
+});
+
 function parseBigintLike(input: string): bigint | null {
   const trimmed = (input ?? '').trim();
   if (!trimmed) {

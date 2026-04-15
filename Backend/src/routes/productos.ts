@@ -23,7 +23,7 @@ productosRouter.get('/', async (req, res, next) => {
         `(
           p.nombreproducto ilike $${params.length}
           or c.nombrecategoria ilike $${params.length}
-          or ('#' || lpad(p.id_producto::text, 4, '0')) ilike $${params.length}
+          or ('#' || p.id_producto::text) ilike $${params.length}
           or p.id_producto::text ilike $${params.length}
         )`,
       );
@@ -39,7 +39,7 @@ productosRouter.get('/', async (req, res, next) => {
 
     const sql = `
       select
-        ('#' || lpad(p.id_producto::text, 4, '0')) as id,
+        ('#' || p.id_producto::text) as id,
         p.nombreproducto as nombre,
         coalesce(c.nombrecategoria, '') as categoria,
         coalesce(p.precio, 0)::float as precio,
@@ -59,16 +59,14 @@ productosRouter.get('/', async (req, res, next) => {
       ) p
       left join detalle_cat dc
         on dc.producto_id_producto = p.id_producto
-       and dc.producto_id_actualizacion = p.inventario_id_actualizacion
       left join categoria c
         on c.id_categoria = dc.categoria_id_categoria
       left join (
-        select lp.producto_id_producto, lp.producto_inv_id_actualiz, sum(lp.cantidad)::int as vendidos
+        select lp.producto_id_producto, sum(lp.cantidad)::int as vendidos
         from lista_productos lp
-        group by lp.producto_id_producto, lp.producto_inv_id_actualiz
+        group by lp.producto_id_producto
       ) v
         on v.producto_id_producto = p.id_producto
-       and v.producto_inv_id_actualiz = p.inventario_id_actualizacion
       ${where.length ? `where ${where.join(' and ')}` : ''}
       order by p.id_producto asc
       limit $${params.length - 1} offset $${params.length}

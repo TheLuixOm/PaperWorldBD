@@ -3,7 +3,15 @@ import { Search } from 'lucide-react';
 import '../inventario/Inventario.css';
 import './Reportes.css';
 import UsuarioMenu from '../Barras/UsuarioMenu';
-import { finalizarPedido, listarReportePedidos, listarReporteVentas, type ReportePedidoItem, type ReporteVentaItem } from '../../../api/reportes';
+import {
+  finalizarPedido,
+  listarReporteInventario,
+  listarReportePedidos,
+  listarReporteVentas,
+  type ReporteInventarioItem,
+  type ReportePedidoItem,
+  type ReporteVentaItem,
+} from '../../../api/reportes';
 
 type ReporteTab = 'ventas' | 'pedidos' | 'inventario';
 
@@ -66,8 +74,16 @@ function formatearStockInventario(registro: RegistroInventario) {
     return String(registro.stock);
   }
 
-  const esEliminado = registro.movimiento === 'Eliminado';
-  return `${esEliminado ? '-' : '+'}${registro.stock}`;
+  if (registro.movimiento === 'Eliminado') {
+    return `-${registro.stock}`;
+  }
+
+  if (registro.movimiento === 'Agregado') {
+    return `+${registro.stock}`;
+  }
+
+  // Si no hay movimiento, no inventar un signo.
+  return String(registro.stock);
 }
 
 function claseStockInventario(registro: RegistroInventario) {
@@ -76,7 +92,15 @@ function claseStockInventario(registro: RegistroInventario) {
   }
 
   if (registro.tipo === 'Cambio reciente') {
-    return registro.movimiento === 'Eliminado' ? 'reportesStockCambioMenos' : 'reportesStockCambioMas';
+    if (registro.movimiento === 'Eliminado') {
+      return 'reportesStockCambioMenos';
+    }
+
+    if (registro.movimiento === 'Agregado') {
+      return 'reportesStockCambioMas';
+    }
+
+    return '';
   }
 
   return '';
@@ -96,6 +120,10 @@ function Reportes() {
   const [cargandoPedidos, setCargandoPedidos] = useState(true);
   const [errorPedidos, setErrorPedidos] = useState<string | null>(null);
   const [finalizandoPedidoId, setFinalizandoPedidoId] = useState<string | null>(null);
+
+  const [inventario, setInventario] = useState<RegistroInventario[]>([]);
+  const [cargandoInventario, setCargandoInventario] = useState(true);
+  const [errorInventario, setErrorInventario] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -133,6 +161,50 @@ function Reportes() {
     };
 
     void cargarVentas();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const cargarInventario = async () => {
+      try {
+        setCargandoInventario(true);
+        setErrorInventario(null);
+        const res = await listarReporteInventario({ limit: 200, offset: 0 });
+        if (cancelled) {
+          return;
+        }
+
+        const normalizados = res.items.map((i: ReporteInventarioItem) => ({
+          id: i.id,
+          producto: i.producto,
+          categoria: i.categoria,
+          stock: Number.isFinite(i.stock) ? i.stock : 0,
+          minimo: Number.isFinite(i.minimo) ? i.minimo : 0,
+          ultimoCambio: i.ultimoCambio,
+          tipo: (i.tipo === 'Cambio reciente' ? 'Cambio reciente' : 'Stock bajo') as 'Stock bajo' | 'Cambio reciente',
+          movimiento: i.movimiento,
+        }));
+
+        setInventario(normalizados);
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+        setErrorInventario(err instanceof Error ? err.message : 'No se pudo cargar el inventario');
+        setInventario([]);
+      } finally {
+        if (!cancelled) {
+          setCargandoInventario(false);
+        }
+      }
+    };
+
+    void cargarInventario();
 
     return () => {
       cancelled = true;
@@ -222,15 +294,6 @@ function Reportes() {
       setFinalizandoPedidoId(null);
     }
   };
-
-  const inventario: RegistroInventario[] = useMemo(
-    () => [
-      { id: 'I-1201', producto: 'Resaltadores', categoria: 'Utiles', stock: 3, minimo: 10, ultimoCambio: '07/04/2026', tipo: 'Stock bajo' },
-      { id: 'I-1200', producto: 'Cuaderno A4', categoria: 'Papeleria', stock: 8, minimo: 12, ultimoCambio: '06/04/2026', tipo: 'Stock bajo' },
-      { id: 'I-1199', producto: 'Cartulina', categoria: 'Papeleria', stock: 45, minimo: 15, ultimoCambio: '07/04/2026', tipo: 'Cambio reciente', movimiento: 'Agregado' },
-    ],
-    [],
-  );
 
   const totalVentas = useMemo(() => ventas.reduce((acc, v) => acc + v.total, 0), [ventas]);
   const totalPedidos = useMemo(() => pedidos.reduce((acc, p) => acc + p.total, 0), [pedidos]);
@@ -499,6 +562,9 @@ function Reportes() {
                 />
               </div>
             </div>
+
+            {cargandoInventario && <p>Cargando inventario...</p>}
+            {errorInventario && <p>Error al cargar inventario: {errorInventario}</p>}
 
             <div className="inventarioTablaContenedor reportesTabla" role="region" aria-label="Tabla de inventario">
               <table className="inventarioTabla">

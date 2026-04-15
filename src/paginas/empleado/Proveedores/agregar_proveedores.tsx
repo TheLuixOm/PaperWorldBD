@@ -1,7 +1,8 @@
-import { type ChangeEvent, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../inventario/Inventario.css';
 import './agregar_proveedores.css';
+import { crearProveedor } from '../../../api/proveedores';
 
 type FormularioProveedor = {
   nombre: string;
@@ -19,17 +20,9 @@ const formularioVacio: FormularioProveedor = {
 
 function AgregarProveedores() {
   const [formularioProveedor, setFormularioProveedor] = useState<FormularioProveedor>(formularioVacio);
-  const [logoSeleccionado, setLogoSeleccionado] = useState<string>('');
-  const inputLogoRef = useRef<HTMLInputElement | null>(null);
+  const [guardando, setGuardando] = useState(false);
+  const [errorFormulario, setErrorFormulario] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    return () => {
-      if (logoSeleccionado.startsWith('blob:')) {
-        URL.revokeObjectURL(logoSeleccionado);
-      }
-    };
-  }, [logoSeleccionado]);
 
   const actualizarCampoFormulario = (campo: keyof FormularioProveedor, valor: string) => {
     setFormularioProveedor((formularioActual) => ({
@@ -40,38 +33,41 @@ function AgregarProveedores() {
 
   const limpiarFormulario = () => {
     setFormularioProveedor(formularioVacio);
-    setLogoSeleccionado('');
-
-    if (inputLogoRef.current) {
-      inputLogoRef.current.value = '';
-    }
   };
 
-  const manejarSeleccionLogo = (evento: ChangeEvent<HTMLInputElement>) => {
-    const archivo = evento.target.files?.[0];
-
-    if (!archivo) {
-      return;
-    }
-
-    if (logoSeleccionado.startsWith('blob:')) {
-      URL.revokeObjectURL(logoSeleccionado);
-    }
-
-    setLogoSeleccionado(URL.createObjectURL(archivo));
-  };
-
-  const guardarProveedor = (mantenerFormularioAbierto: boolean) => {
+  const guardarProveedor = async (mantenerFormularioAbierto: boolean) => {
     if (!formularioProveedor.nombre.trim()) {
       return;
     }
 
-    if (mantenerFormularioAbierto) {
-      limpiarFormulario();
+    if (guardando) {
       return;
     }
 
-    navigate('/proveedores');
+    setGuardando(true);
+    setErrorFormulario(null);
+
+    try {
+      await crearProveedor({
+        referencia: formularioProveedor.referencia,
+        nombre: formularioProveedor.nombre.trim(),
+        telefono: formularioProveedor.contacto.trim(),
+        correo: formularioProveedor.email.trim(),
+      });
+
+      if (mantenerFormularioAbierto) {
+        limpiarFormulario();
+        return;
+      }
+
+      navigate('/proveedores');
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[proveedores] no se pudo crear en API', err);
+      setErrorFormulario('No se pudo guardar el proveedor en la base de datos.');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -84,11 +80,12 @@ function AgregarProveedores() {
       </header>
 
       <section className="inventarioPanel inventarioPanelAgregar">
+        {errorFormulario ? <p>{errorFormulario}</p> : null}
         <form
           className="inventarioFormularioAgregar inventarioFormularioAgregarProveedor"
           onSubmit={(event) => {
             event.preventDefault();
-            guardarProveedor(false);
+            void guardarProveedor(false);
           }}
         >
           <input
@@ -121,30 +118,13 @@ function AgregarProveedores() {
             onChange={(event) => actualizarCampoFormulario('contacto', event.target.value)}
           />
 
-          <div className="inventarioFilaImagen inventarioFilaImagenProveedor">
-            <p className="inventarioTextoImagen">Logo del proveedor:</p>
-
-            <div className="inventarioCargaImagenContenedor">
-              <button type="button" className="inventarioBotonSubirImagen" onClick={() => inputLogoRef.current?.click()}>
-                Subir logo
-                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                  <path d="M7 17a4 4 0 0 1 0-8 5.5 5.5 0 0 1 10.5-1.7A3.8 3.8 0 0 1 18 17" />
-                  <path d="M12 11v8" />
-                  <path d="m8.9 13.8 3.1-3.1 3.1 3.1" />
-                </svg>
-              </button>
-
-              <input ref={inputLogoRef} type="file" accept="image/*" className="inventarioInputArchivo" onChange={manejarSeleccionLogo} />
-            </div>
-          </div>
-
           <div className="inventarioAccionesFormulario inventarioAccionesFormularioProveedor">
-            <button className="inventarioBotonGuardar" type="submit">
-              Guardar proveedor
+            <button className="inventarioBotonGuardar" type="submit" disabled={guardando}>
+              {guardando ? 'Guardando...' : 'Guardar proveedor'}
             </button>
 
-            <button className="inventarioBotonGuardar" type="button" onClick={() => guardarProveedor(true)}>
-              Guardar y añadir otro
+            <button className="inventarioBotonGuardar" type="button" disabled={guardando} onClick={() => void guardarProveedor(true)}>
+              {guardando ? 'Guardando...' : 'Guardar y añadir otro'}
             </button>
           </div>
         </form>
