@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLayoutEffect, useRef, useState } from 'react';
 import './Register.css';
 import loginImage from '../../images/login.svg';
@@ -25,6 +25,22 @@ function RegisterEsc() {
     const meses = Array.from({ length: 12 }, (_, indice) => String(indice + 1).padStart(2, '0'));
     const year_actual = new Date().getFullYear();
     const years = Array.from({ length: 100 }, (_, indice) => String(year_actual - indice));
+
+    const regexNombre = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]+$/;
+    const regexUsername = /^[a-zA-Z0-9._-]+$/;
+    const regexTelefono = /^\d{7,15}$/;
+
+    const filtrarNombreInput = (event: React.FormEvent<HTMLInputElement>) => {
+        event.currentTarget.value = event.currentTarget.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]/g, '');
+    };
+
+    const filtrarTelefonoInput = (event: React.FormEvent<HTMLInputElement>) => {
+        event.currentTarget.value = event.currentTarget.value.replace(/\D/g, '');
+    };
+
+    const filtrarUsernameInput = (event: React.FormEvent<HTMLInputElement>) => {
+        event.currentTarget.value = event.currentTarget.value.replace(/[^a-zA-Z0-9._-]/g, '');
+    };
 
     const volverALogin = () => {
         if (animando) {
@@ -72,6 +88,32 @@ function RegisterEsc() {
             return;
         }
 
+        if (!regexNombre.test(nombre)) {
+            setError('El nombre no puede contener números ni símbolos.');
+            return;
+        }
+
+        if (!regexNombre.test(apellido)) {
+            setError('El apellido no puede contener números ni símbolos.');
+            return;
+        }
+
+        if (correo.includes(' ')) {
+            setError('El correo no puede contener espacios.');
+            return;
+        }
+
+        if (!regexUsername.test(username)) {
+            setError('El nombre de usuario solo puede contener letras, números, punto, guion y guion bajo.');
+            return;
+        }
+
+        const telefonoNormalizado = telefono.replace(/\D/g, '');
+        if (!regexTelefono.test(telefonoNormalizado)) {
+            setError('El teléfono solo puede contener números (7 a 15 dígitos).');
+            return;
+        }
+
         const edad = `${anio}-${mes}-${dia}`;
 
         setError('');
@@ -90,7 +132,7 @@ function RegisterEsc() {
                     username,
                     password,
                     edad,
-                    telefono,
+                    telefono: telefonoNormalizado,
                 }),
             });
 
@@ -164,6 +206,7 @@ function RegisterEsc() {
                                     className="register_input"
                                     placeholder="Nombre"
                                     autoComplete="given-name"
+                                    onInput={filtrarNombreInput}
                                 />
                                 <input
                                     id="apellido"
@@ -172,6 +215,7 @@ function RegisterEsc() {
                                     className="register_input"
                                     placeholder="Apellido"
                                     autoComplete="family-name"
+                                    onInput={filtrarNombreInput}
                                 />
                         </div>
                     
@@ -182,6 +226,8 @@ function RegisterEsc() {
                             className="register_input"
                             placeholder="Email"
                             autoComplete="email"
+                            autoCapitalize="none"
+                            spellCheck={false}
                         />
                 
                         <input
@@ -191,6 +237,9 @@ function RegisterEsc() {
                             className="register_input"
                             placeholder="Nombre de usuario"
                             autoComplete="username"
+                            autoCapitalize="none"
+                            spellCheck={false}
+                            onInput={filtrarUsernameInput}
                         />
 
                         <input
@@ -209,6 +258,9 @@ function RegisterEsc() {
                             className="register_input"
                             placeholder="Teléfono"
                             autoComplete="tel"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            onInput={filtrarTelefonoInput}
                             required
                         />
 
@@ -235,10 +287,22 @@ function RegisterEsc() {
 							</select>
 						</div>
 
-                        <label>
-                            <input className='checkbox' type="checkbox" name="terminos" id="terminos" required />
-                            Acepto los términos y condiciones
-                        </label>
+                        <div className="register_terminos">
+                            <label className="register_terminos_linea">
+                                <input className='checkbox' type="checkbox" name="terminos" id="terminos" required />
+                                <span>Acepto los </span>
+                                <Link
+                                    className="register_terminos_link"
+                                    to="/terminos"
+                                    onClick={(event) => event.stopPropagation()}
+                                >
+                                    términos y condiciones
+                                </Link>
+                            </label>
+                            <p className="register_terminos_subtitulo">
+                                Te recomendamos leerlos antes de registrarte.
+                            </p>
+                        </div>
 
                         <div className="register_actions" role="group" aria-label="Acciones de registro">
                             <button type="submit" className="register_button register_button_primary" disabled={cargando}>

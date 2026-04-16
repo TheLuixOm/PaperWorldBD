@@ -1,5 +1,5 @@
 import './RegisterMov.css';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import loginImage from '../../images/login.svg';
 import clipNegro from '../../images/Clip_negro.svg';
@@ -12,6 +12,22 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
   const navegar = useNavigate();
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
+
+  const regexNombre = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]+$/;
+  const regexUsername = /^[a-zA-Z0-9._-]+$/;
+  const regexTelefono = /^\d{7,15}$/;
+
+  const filtrarNombreInput = (event: React.FormEvent<HTMLInputElement>) => {
+    event.currentTarget.value = event.currentTarget.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]/g, '');
+  };
+
+  const filtrarTelefonoInput = (event: React.FormEvent<HTMLInputElement>) => {
+    event.currentTarget.value = event.currentTarget.value.replace(/\D/g, '');
+  };
+
+  const filtrarUsernameInput = (event: React.FormEvent<HTMLInputElement>) => {
+    event.currentTarget.value = event.currentTarget.value.replace(/[^a-zA-Z0-9._-]/g, '');
+  };
 
   const registrarCuenta = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -34,6 +50,32 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
       return;
     }
 
+    if (!regexNombre.test(nombre)) {
+      setError('El nombre no puede contener números ni símbolos.');
+      return;
+    }
+
+    if (!regexNombre.test(apellido)) {
+      setError('El apellido no puede contener números ni símbolos.');
+      return;
+    }
+
+    if (correo.includes(' ')) {
+      setError('El correo no puede contener espacios.');
+      return;
+    }
+
+    if (!regexUsername.test(username)) {
+      setError('El usuario solo puede contener letras, números, punto, guion y guion bajo.');
+      return;
+    }
+
+    const telefonoNormalizado = telefono.replace(/\D/g, '');
+    if (!regexTelefono.test(telefonoNormalizado)) {
+      setError('El teléfono solo puede contener números (7 a 15 dígitos).');
+      return;
+    }
+
     setError('');
     setCargando(true);
 
@@ -46,7 +88,7 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
         body: JSON.stringify({
           nombre,
           apellido,
-          telefono,
+          telefono: telefonoNormalizado,
           correo,
           username,
           password,
@@ -95,11 +137,56 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
             </button>
           </p>
 
-          <input className="registro-mov-campo" name="nombre" type="text" placeholder="Nombre" autoComplete="given-name" required />
-          <input className="registro-mov-campo" name="apellido" type="text" placeholder="Apellido" autoComplete="family-name" required />
-          <input className="registro-mov-campo" name="telefono" type="tel" placeholder="Telefono" autoComplete="tel" required />
-          <input className="registro-mov-campo" name="correo" type="email" placeholder="Correo" autoComplete="email" required />
-          <input className="registro-mov-campo" name="username" type="text" placeholder="Usuario" autoComplete="username" required />
+          <input
+            className="registro-mov-campo"
+            name="nombre"
+            type="text"
+            placeholder="Nombre"
+            autoComplete="given-name"
+            onInput={filtrarNombreInput}
+            required
+          />
+          <input
+            className="registro-mov-campo"
+            name="apellido"
+            type="text"
+            placeholder="Apellido"
+            autoComplete="family-name"
+            onInput={filtrarNombreInput}
+            required
+          />
+          <input
+            className="registro-mov-campo"
+            name="telefono"
+            type="tel"
+            placeholder="Telefono"
+            autoComplete="tel"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            onInput={filtrarTelefonoInput}
+            required
+          />
+          <input
+            className="registro-mov-campo"
+            name="correo"
+            type="email"
+            placeholder="Correo"
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            required
+          />
+          <input
+            className="registro-mov-campo"
+            name="username"
+            type="text"
+            placeholder="Usuario"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            onInput={filtrarUsernameInput}
+            required
+          />
           <input className="registro-mov-campo" name="password" type="password" placeholder="Contraseña" autoComplete="new-password" required />
 
           <input className="registro-mov-campo registro-mov-campo-fecha" name="fecha_nacimiento" type="date" aria-label="Fecha de nacimiento" required />
@@ -108,10 +195,21 @@ function RegisterMov({ onIrLogin }: RegisterMovProps) {
             {cargando ? 'Creando cuenta...' : 'Crear Cuenta'}
           </button>
 
-          <label className="registro-mov-linea-aceptacion">
-            <input type="checkbox" required /> He leído y acepto los{' '}
-            <span className="registro-mov-terminos">términos y condiciones</span>
-          </label>
+          <div className="registro-mov-terminos-bloque">
+            <label className="registro-mov-linea-aceptacion">
+              <input type="checkbox" required /> He leído y acepto los{' '}
+              <Link
+                className="registro-mov-terminos"
+                to="/terminos"
+                onClick={(event) => event.stopPropagation()}
+              >
+                términos y condiciones
+              </Link>
+            </label>
+            <p className="registro-mov-terminos-subtitulo">
+              Revisa los términos antes de crear tu cuenta.
+            </p>
+          </div>
 
           {error ? <p className="registro-mov-error">{error}</p> : null}
 

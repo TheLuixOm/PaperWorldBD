@@ -1,6 +1,8 @@
 export type ProductoApiItem = {
   id: string;
   nombre: string;
+  descripcion: string;
+  descripcion: string;
   categoria: string;
   precio: number;
   cantidad: number;

@@ -33,7 +33,7 @@ function normalizarProductoApi(p: ProductoApiItem): ProductoMovil {
   return {
     id: p.id,
     nombre: p.nombre ?? '',
-    descripcion: p.nombre ?? '',
+    descripcion: p.descripcionpcion ?? '',
     categoria: p.categoria ?? '',
     precio: Number.isFinite(p.precio) ? p.precio : 0,
     imagen: p.imagen || imagenPorDefecto(p.id),

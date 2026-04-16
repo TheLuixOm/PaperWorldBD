@@ -13,6 +13,7 @@ import './CatalogoCliente.css';
 type ProductoCatalogo = {
   id: string;
   nombre: string;
+  descripcion: string;
   categoria: string;
   precio: number;
   imagen: string;
@@ -31,6 +32,7 @@ function normalizarProductoApi(p: ProductoApiItem): ProductoCatalogo {
   return {
     id: p.id,
     nombre: p.nombre ?? '',
+    descripcion: p.descripcion ?? '',
     categoria: p.categoria ?? '',
     precio: Number.isFinite(p.precio) ? p.precio : 0,
     imagen: p.imagen || imagenPorDefecto(p.id),
@@ -206,6 +208,7 @@ function CatalogoCliente() {
     setProductoExpandido({
       id: producto.id,
       nombre: producto.nombre,
+      descripcion: producto.descripcion,
       precio: producto.precio,
       imagen: producto.imagen,
       categoria: producto.categoria,

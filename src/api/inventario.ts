@@ -2,6 +2,7 @@ export type InventarioApiItem = {
   id_producto: string;
   inventario_id_actualizacion: string;
   nombre: string;
+  descripcion: string;
   precio: number;
   cantidad: number;
   imagen: string;
@@ -85,6 +86,7 @@ export async function listarInventario(params?: { q?: string; categoria?: string
 export async function crearProductoInventario(input: {
   referencia?: string;
   nombre: string;
+  descripcion?: string;
   categoria?: string;
   precio: number;
   cantidad: number;
@@ -98,6 +100,7 @@ export async function crearProductoInventario(input: {
   const body = {
     id_producto: idDigits || undefined,
     nombre: input.nombre,
+    descripcion: input.descripcion ?? '',
     categoria: input.categoria ?? '',
     precio: input.precio,
     cantidad: input.cantidad,
@@ -117,6 +120,7 @@ export async function crearProductoInventario(input: {
 export async function actualizarProductoInventario(idProducto: string, input: {
   nombre: string;
   referencia?: string;
+  descripcion?: string;
   categoria?: string;
   precio: number;
   cantidad: number;
@@ -127,6 +131,7 @@ export async function actualizarProductoInventario(idProducto: string, input: {
 
   const body = {
     nombre: input.nombre,
+    descripcion: input.descripcion ?? '',
     categoria: input.categoria ?? '',
     precio: input.precio,
     cantidad: input.cantidad,

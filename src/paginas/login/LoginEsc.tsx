@@ -23,6 +23,8 @@ function LoginEsc() {
 	const visualRef = useRef<HTMLDivElement | null>(null);
 	const yaAnimadoRef = useRef(false);
 
+	const normalizarUsuario = (valor: string) => valor.replace(/\s+/g, '');
+
 	useLayoutEffect(() => {
 		if (yaAnimadoRef.current) {
 			return;
@@ -53,11 +55,16 @@ function LoginEsc() {
 
 	const iniciarSesion = async (event: React.FormEvent) => {
 		event.preventDefault();
-		const usuario = email.trim();
+		const usuario = normalizarUsuario(email).trim();
 		const clave = password.trim();
 
 		if (!usuario || !clave) {
 			setError('Ingresa correo o usuario y contraseña.');
+			return;
+		}
+
+		if (email !== normalizarUsuario(email)) {
+			setError('El correo o usuario no puede contener espacios.');
 			return;
 		}
 
@@ -156,8 +163,10 @@ function LoginEsc() {
 							className="login-esc-input"
 							placeholder="Correo o usuario"
 							autoComplete="username"
+							autoCapitalize="none"
+							spellCheck={false}
 							value={email}
-							onChange={(event) => setEmail(event.target.value)}
+							onChange={(event) => setEmail(normalizarUsuario(event.target.value))}
 						/>
 
 						<label className="login-esc-label" htmlFor="password">

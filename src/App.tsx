@@ -22,6 +22,7 @@ import Ventas_Esc from './paginas/empleado/Ventas/Ventas_Esc.tsx'
 import Ventas_mov from './paginas/empleado/Ventas/Ventas_mov.tsx'
 import RecuperarClaveEsc from './paginas/recuperar/RecuperarClave'
 import RecuperarClaveMov from './paginas/recuperar/RecuperarClaveMov'
+import Terminos from './paginas/terminos/Terminos'
 
 const puntoCorteMovil = 500
 
@@ -130,6 +131,8 @@ function Aplicacion() {
 
       <Route path="/registro" element={elementoRegistro} />
       <Route path="/register" element={elementoRegistro} />
+
+      <Route path="/terminos" element={<Terminos />} />
 
       <Route element={<RequireUserType tipo="cliente" />}>
         <Route path="/cliente" element={<Navigate to="/cliente/inicio" replace />} />

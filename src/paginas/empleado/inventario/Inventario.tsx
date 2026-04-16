@@ -18,6 +18,7 @@ import {
 type Producto = {
     id: string;
     nombre: string;
+    descripcion: string;
     categoria: string;
     precio: string;
     cantidad: number;
@@ -28,6 +29,7 @@ type Producto = {
 function mapearProductoDesdeApi(it: {
     id_producto: string;
     nombre: string;
+    descripcion: string;
     categoria: string;
     precio: number;
     cantidad: number;
@@ -36,6 +38,7 @@ function mapearProductoDesdeApi(it: {
     return {
         id: formatProductoIdDisplay(it.id_producto),
         nombre: it.nombre,
+        descripcion: it.descripcion ?? '',
         categoria: it.categoria || 'sin categoria',
         precio: formatPrecioDisplay(it.precio),
         cantidad: it.cantidad,
@@ -110,6 +113,13 @@ function Inventario() {
             } catch (err) {
                 // eslint-disable-next-line no-console
                 console.error('[inventario] no se pudo eliminar en API', err);
+
+                const mensaje = err instanceof Error ? err.message : '';
+                if (mensaje === 'ProductoReferenciado') {
+                    setErrorCarga('No se puede eliminar: el producto está asociado a ventas/pedidos u otros registros.');
+                    return;
+                }
+
                 setErrorCarga('No se pudo eliminar el producto en la base de datos.');
             }
         })();
@@ -206,6 +216,7 @@ function Inventario() {
             await actualizarProductoInventario(productoEnEdicion.id, {
                 nombre: datosFormulario.nombre.trim() || productoEnEdicion.nombre,
                 referencia: datosFormulario.referencia,
+                descripcion: datosFormulario.descripcion,
                 categoria: datosFormulario.categoria,
                 precio,
                 cantidad: Number.isNaN(cantidad) ? 0 : cantidad,
@@ -260,6 +271,7 @@ function Inventario() {
             const productoCreado = await crearProductoInventario({
                 referencia: datosFormulario.referencia,
                 nombre: datosFormulario.nombre.trim() || 'Producto sin nombre',
+                descripcion: datosFormulario.descripcion,
                 categoria: datosFormulario.categoria,
                 precio,
                 cantidad: Number.isNaN(cantidad) ? 0 : cantidad,

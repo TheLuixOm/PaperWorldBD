@@ -141,10 +141,10 @@ reportesRouter.get('/inventario', async (req, res, next) => {
         coalesce(p.nombreproducto, '') as producto,
         coalesce(c.nombrecategoria, '') as categoria,
         coalesce(p.cantidad, 0) as stock,
-        ci.stock_minimo as minimo,
+        coalesce(ci.stock_minimo, 10) as minimo,
         ci.fecha_actualizacion::text as ultimo_cambio,
         case
-          when ci.stock_minimo is not null and coalesce(p.cantidad, 0) <= ci.stock_minimo then 'Stock bajo'
+          when coalesce(p.cantidad, 0) <= coalesce(ci.stock_minimo, 10) then 'Stock bajo'
           when ci.fecha_actualizacion is not null and ci.fecha_actualizacion >= (now() - interval '7 days') then 'Cambio reciente'
           else null
         end as tipo,
@@ -165,13 +165,13 @@ reportesRouter.get('/inventario', async (req, res, next) => {
         order by r.fecha desc
         limit 1
       ) rm on true
-      where (
-        (ci.stock_minimo is not null and coalesce(p.cantidad, 0) <= ci.stock_minimo)
+      where coalesce(p.activo, true) = true and (
+        (coalesce(p.cantidad, 0) <= coalesce(ci.stock_minimo, 10))
         or (ci.fecha_actualizacion is not null and ci.fecha_actualizacion >= (now() - interval '7 days'))
       )
       order by
         case
-          when ci.stock_minimo is not null and coalesce(p.cantidad, 0) <= ci.stock_minimo then 0
+          when coalesce(p.cantidad, 0) <= coalesce(ci.stock_minimo, 10) then 0
           else 1
         end asc,
         ci.fecha_actualizacion desc nulls last,

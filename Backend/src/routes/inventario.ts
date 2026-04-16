@@ -14,10 +14,13 @@ type ProductoInventario = {
   id_producto: string; // bigint como string
   inventario_id_actualizacion: string; // bigint como string
   nombre: string;
+  descripcion: string;
   precio: number;
   cantidad: number;
   imagen: string;
   categoria: string;
+  activo: boolean;
+  fecha_inactivacion: string | null;
   fecha_actualizacion: string | null;
   stock_minimo: number | null;
 };
@@ -89,10 +92,13 @@ async function fetchProductoLatest(idProducto: bigint): Promise<ProductoInventar
       p.id_producto::text as id_producto,
       p.inventario_id_actualizacion::text as inventario_id_actualizacion,
       coalesce(p.nombreproducto, '') as nombre,
+      coalesce(p.descripcion, '') as descripcion,
       coalesce(p.precio, 0)::float as precio,
       coalesce(p.cantidad, 0) as cantidad,
       coalesce(p.imagen, '') as imagen,
       coalesce(c.nombrecategoria, '') as categoria,
+      coalesce(p.activo, true) as activo,
+      p.fecha_inactivacion::text as fecha_inactivacion,
       ci.fecha_actualizacion::text as fecha_actualizacion,
       ci.stock_minimo as stock_minimo
     from producto p
@@ -100,7 +106,7 @@ async function fetchProductoLatest(idProducto: bigint): Promise<ProductoInventar
     left join detalle_cat dc
       on dc.producto_id_producto = p.id_producto
     left join categoria c on c.id_categoria = dc.categoria_id_categoria
-    where p.id_producto = $1
+    where p.id_producto = $1 and coalesce(p.activo, true) = true
     limit 1
     `,
     [idProducto.toString()],
@@ -116,10 +122,13 @@ async function fetchProductoLatestWithClient(client: PoolClient, idProducto: big
       p.id_producto::text as id_producto,
       p.inventario_id_actualizacion::text as inventario_id_actualizacion,
       coalesce(p.nombreproducto, '') as nombre,
+      coalesce(p.descripcion, '') as descripcion,
       coalesce(p.precio, 0)::float as precio,
       coalesce(p.cantidad, 0) as cantidad,
       coalesce(p.imagen, '') as imagen,
       coalesce(c.nombrecategoria, '') as categoria,
+      coalesce(p.activo, true) as activo,
+      p.fecha_inactivacion::text as fecha_inactivacion,
       ci.fecha_actualizacion::text as fecha_actualizacion,
       ci.stock_minimo as stock_minimo
     from producto p
@@ -127,7 +136,7 @@ async function fetchProductoLatestWithClient(client: PoolClient, idProducto: big
     left join detalle_cat dc
       on dc.producto_id_producto = p.id_producto
     left join categoria c on c.id_categoria = dc.categoria_id_categoria
-    where p.id_producto = $1
+    where p.id_producto = $1 and coalesce(p.activo, true) = true
     limit 1
     `,
     [idProducto.toString()],
@@ -151,6 +160,9 @@ inventarioRouter.get('/', async (req, res, next) => {
     const params: unknown[] = [];
     const where: string[] = [];
 
+    // Baja lógica: por defecto no devolvemos productos inactivos
+    where.push('coalesce(p.activo, true) = true');
+
     if (q) {
       params.push(`%${q}%`);
       where.push(`(p.nombreproducto ilike $${params.length} or c.nombrecategoria ilike $${params.length})`);
@@ -169,10 +181,13 @@ inventarioRouter.get('/', async (req, res, next) => {
         p.id_producto::text as id_producto,
         p.inventario_id_actualizacion::text as inventario_id_actualizacion,
         coalesce(p.nombreproducto, '') as nombre,
+        coalesce(p.descripcion, '') as descripcion,
         coalesce(p.precio, 0)::float as precio,
         coalesce(p.cantidad, 0) as cantidad,
         coalesce(p.imagen, '') as imagen,
         coalesce(c.nombrecategoria, '') as categoria,
+        coalesce(p.activo, true) as activo,
+        p.fecha_inactivacion::text as fecha_inactivacion,
         ci.fecha_actualizacion::text as fecha_actualizacion,
         ci.stock_minimo as stock_minimo
       from producto p
@@ -237,6 +252,7 @@ inventarioRouter.post('/', async (req, res, next) => {
       return res.status(400).json({ error: 'BadRequest', detail: 'precio inválido' });
     }
 
+    const descripcion = typeof body.descripcion === 'string' ? body.descripcion.trim() : '';
     const cantidad = Math.max(0, parseIntSafe(body.cantidad, 0));
     const imagen = typeof body.imagen === 'string' ? body.imagen.trim() : '';
     const imagenBase64 = typeof body.imagen_base64 === 'string' ? body.imagen_base64.trim() : '';
@@ -310,12 +326,13 @@ inventarioRouter.post('/', async (req, res, next) => {
 
       await client.query(
         `insert into producto
-          (id_producto, nombreproducto, precio, imagen, cantidad, inventario_id_actualizacion)
+          (id_producto, nombreproducto, descripcion, precio, imagen, cantidad, inventario_id_actualizacion)
          values
-          ($1, $2, $3, $4, $5, $6)`,
+          ($1, $2, $3, $4, $5, $6, $7)`,
         [
           idProducto.toString(),
           nombre,
+          descripcion,
           precio,
           imagenFinal,
           cantidad,
@@ -375,6 +392,7 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
     }>;
 
     const nombre = typeof body.nombre === 'string' ? body.nombre.trim() : '';
+    const descripcion = typeof body.descripcion === 'string' ? body.descripcion.trim() : null;
     const precio = parseNumberSafe(body.precio, NaN);
     const cantidad = parseIntSafe(body.cantidad, NaN);
 
@@ -397,7 +415,7 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
            inventario_id_actualizacion::text as inventario_id_actualizacion,
            coalesce(cantidad, 0) as cantidad
          from producto
-         where id_producto = $1
+         where id_producto = $1 and coalesce(activo, true) = true
          for update`,
         [idProducto.toString()],
       );
@@ -414,11 +432,12 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
       await client.query(
         `update producto
          set nombreproducto = $1,
-             precio = $2,
-             imagen = $3,
-             cantidad = $4
-         where id_producto = $5`,
-        [nombre, precio, imagen, cantidadDespues, idProducto.toString()],
+             descripcion = coalesce($2, descripcion),
+             precio = $3,
+             imagen = $4,
+             cantidad = $5
+         where id_producto = $6`,
+        [nombre, descripcion, precio, imagen, cantidadDespues, idProducto.toString()],
       );
 
       // Solo marcamos el inventario como "cambio reciente" si cambió stock o el mínimo.
@@ -470,7 +489,7 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
 });
 
 // DELETE /api/inventario/:idProducto
-// Elimina el registro más reciente del producto (puede fallar si hay FKs en facturas/ordenes)
+// Baja lógica: marca el producto como inactivo (no borra filas ni rompe FKs)
 inventarioRouter.delete('/:idProducto', async (req, res, next) => {
   try {
     const idProducto = parseBigintLike(req.params.idProducto);
@@ -479,45 +498,34 @@ inventarioRouter.delete('/:idProducto', async (req, res, next) => {
     }
 
     const result = await withTransaction(async (client) => {
-      const latest = await client.query<{ inventario_id_actualizacion: string }>(
-        `select inventario_id_actualizacion::text as inventario_id_actualizacion
-         from producto
+      const updated = await client.query<{ id_producto: string }>(
+        `update producto
+           set activo = false,
+               fecha_inactivacion = coalesce(fecha_inactivacion, now())
          where id_producto = $1
-         for update`,
+           and coalesce(activo, true) = true
+         returning id_producto::text as id_producto`,
         [idProducto.toString()],
       );
 
-      if (!latest.rowCount) {
+      if (updated.rowCount) {
+        return { ok: true as const, status: 204 as const };
+      }
+
+      const exists = await client.query('select 1 from producto where id_producto = $1 limit 1', [
+        idProducto.toString(),
+      ]);
+
+      if (!exists.rowCount) {
         return { ok: false as const, status: 404 as const };
       }
 
-      const invId = BigInt(latest.rows[0]!.inventario_id_actualizacion);
-
-      // Limpieza de relaciones "propias" del inventario
-      await client.query('delete from detalle_cat where producto_id_producto = $1', [idProducto.toString()]);
-      await client.query('delete from detalles_proveedor where producto_id_producto = $1', [idProducto.toString()]);
-
-      try {
-        await client.query('delete from producto where id_producto = $1', [idProducto.toString()]);
-      } catch (err) {
-        // FK violation (por ejemplo, si ya está en lista_productos o detalle_factura)
-        if (err && typeof err === 'object' && 'code' in err && (err as { code?: unknown }).code === '23503') {
-          return { ok: false as const, status: 409 as const, error: 'ProductoReferenciado' as const };
-        }
-        throw err;
-      }
-
-      // borra cambios_inv si nadie más lo usa
-      await client.query(
-        'delete from cambios_inv ci where ci.id_actualizacion = $1 and not exists (select 1 from producto p where p.inventario_id_actualizacion = $1)',
-        [invId.toString()],
-      );
-
+      // ya estaba inactivo
       return { ok: true as const, status: 204 as const };
     });
 
     if (!result.ok) {
-      return res.status(result.status).json({ error: result.status === 409 ? result.error : 'NotFound' });
+      return res.status(result.status).json({ error: 'NotFound' });
     }
 
     return res.status(204).end();

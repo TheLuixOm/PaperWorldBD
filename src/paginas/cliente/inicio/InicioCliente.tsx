@@ -12,6 +12,8 @@ import './InicioCliente.css';
 type ProductoInicio = {
   id: string;
   nombre: string;
+  descripcion: string;
+  descripcion: string;
   categoria: string;
   precio: number;
   imagen: string;
@@ -28,7 +30,9 @@ function imagenPorDefecto(idProducto: string) {
 function normalizarProductoApi(p: ProductoApiItem): ProductoInicio {
   return {
     id: p.id,
+    descripcion: p.descripcion ?? '',
     nombre: p.nombre ?? '',
+    descripcion: p.descripcion ?? '',
     categoria: p.categoria ?? '',
     precio: Number.isFinite(p.precio) ? p.precio : 0,
     imagen: p.imagen || imagenPorDefecto(p.id),
@@ -297,8 +301,10 @@ function InicioCliente() {
     }
 
     setProductoExpandido({
+      descripcion: producto.descripcion,
       id: producto.id,
       nombre: producto.nombre,
+      descripcion: producto.descripcion,
       precio: producto.precio,
       imagen: producto.imagen,
       categoria: producto.categoria,

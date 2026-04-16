@@ -14,6 +14,9 @@ dist-ssr
 
 # Documentación local / entregables (no versionar)
 ANALISIS_SISTEMAS.md
+ANALISIS_SISTEMAS.pdf
+mardown.md
+Analisis_Sistemas.html
 
 # Env files (no subir secretos)
 .env

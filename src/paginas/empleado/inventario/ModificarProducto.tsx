@@ -4,6 +4,7 @@ import UsuarioMenu from '../Barras/UsuarioMenu';
 type Producto = {
   id: string;
   nombre: string;
+  descripcion: string;
   categoria: string;
   precio: string;
   cantidad: number;
@@ -37,7 +38,7 @@ function construirFormulario(producto: Producto): DatosFormulario {
     categoria: producto.categoria,
     precio: producto.precio,
     cantidad: String(producto.cantidad),
-    descripcion: '',
+    descripcion: producto.descripcion ?? '',
   };
 }
 

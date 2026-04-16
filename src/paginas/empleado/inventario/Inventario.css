@@ -15,6 +15,18 @@
   animation: inventarioVistaCambioIn 240ms ease-out;
 }
 
+/*
+  Inventario: este wrapper debe ocupar el alto disponible para que el scroll
+  viva solo en la lista (tabla / lista móvil) y no en toda la vista.
+*/
+#inventario.inventarioVista > .inventarioVistaCambio {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 @keyframes inventarioVistaCambioIn {
   from {
     opacity: 0;
@@ -324,6 +336,7 @@
   flex-direction: column;
   justify-content: space-between;
   gap: 16px;
+  overflow: hidden;
 }
 
 .inventarioPanelAgregar {
@@ -516,7 +529,32 @@
 .inventarioTablaContenedor {
   flex: 1;
   min-height: 0;
-  overflow-x: auto;
+  overflow: auto;
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #067bb6 rgba(6, 123, 182, 0.18);
+}
+
+/* Chrome / Edge / Safari */
+#inventario .inventarioTablaContenedor::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+#inventario .inventarioTablaContenedor::-webkit-scrollbar-track {
+  background: rgba(6, 123, 182, 0.12);
+  border-radius: 999px;
+}
+
+#inventario .inventarioTablaContenedor::-webkit-scrollbar-thumb {
+  background: #067bb6;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.65);
+}
+
+#inventario .inventarioTablaContenedor::-webkit-scrollbar-thumb:hover {
+  background: #056694;
 }
 
 .inventarioTabla {
@@ -527,6 +565,30 @@
 
 .inventarioListaMovil {
   display: none;
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #067bb6 rgba(6, 123, 182, 0.18);
+}
+
+/* Chrome / Edge / Safari */
+#inventario .inventarioListaMovil::-webkit-scrollbar {
+  width: 10px;
+}
+
+#inventario .inventarioListaMovil::-webkit-scrollbar-track {
+  background: rgba(6, 123, 182, 0.12);
+  border-radius: 999px;
+}
+
+#inventario .inventarioListaMovil::-webkit-scrollbar-thumb {
+  background: #067bb6;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.65);
+}
+
+#inventario .inventarioListaMovil::-webkit-scrollbar-thumb:hover {
+  background: #056694;
 }
 
 .inventarioTabla thead th {
@@ -899,9 +961,13 @@
 }
 
 @media (max-width: 580px) {
-  .inventarioVista {
+  #inventario.inventarioVista {
     padding: 10px 0 0;
     gap: 0;
+    overflow: hidden;
+  }
+
+  #inventario.inventarioVista.inventarioVistaAgregar {
     overflow-y: auto;
     overflow-x: hidden;
   }
@@ -1127,6 +1193,10 @@
     display: block;
     width: 100%;
     border-bottom: 1px solid #d5dce8;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .inventarioListaMovilEncabezado {

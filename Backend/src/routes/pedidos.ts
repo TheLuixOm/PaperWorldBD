@@ -166,7 +166,7 @@ pedidosRouter.post('/', async (req, res, next) => {
              coalesce(p.cantidad, 0) as stock,
              coalesce(p.nombreproducto, '') as nombre
            from producto p
-           where p.id_producto = $1
+           where p.id_producto = $1 and coalesce(p.activo, true) = true
            limit 1
            for update`,
           [it.idProducto.toString()],
@@ -211,6 +211,7 @@ pedidosRouter.post('/', async (req, res, next) => {
           `update producto
              set cantidad = cantidad - $2
            where id_producto = $1
+             and coalesce(activo, true) = true
              and cantidad >= $2`,
           [f.id_producto.toString(), it.cantidad],
         );

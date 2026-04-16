@@ -41,6 +41,7 @@ productosRouter.get('/', async (req, res, next) => {
       select
         ('#' || p.id_producto::text) as id,
         p.nombreproducto as nombre,
+        coalesce(p.descripcion, '') as descripcion,
         coalesce(c.nombrecategoria, '') as categoria,
         coalesce(p.precio, 0)::float as precio,
         coalesce(p.cantidad, 0) as cantidad,
@@ -51,10 +52,12 @@ productosRouter.get('/', async (req, res, next) => {
           p0.id_producto,
           p0.inventario_id_actualizacion,
           p0.nombreproducto,
+          p0.descripcion,
           p0.precio,
           p0.cantidad,
           p0.imagen
         from producto p0
+        where coalesce(p0.activo, true) = true
         order by p0.id_producto asc, p0.inventario_id_actualizacion desc
       ) p
       left join detalle_cat dc
@@ -73,8 +76,7 @@ productosRouter.get('/', async (req, res, next) => {
     `;
 
     const result = await query<{
-      id: string;
-      nombre: string | null;
+      descripcion: string;
       categoria: string;
       precio: number;
       cantidad: number;
@@ -85,6 +87,7 @@ productosRouter.get('/', async (req, res, next) => {
     const productos = result.rows.map((r) => ({
       id: r.id,
       nombre: r.nombre ?? '',
+      descripcion: r.descripcion ?? '',
       categoria: r.categoria,
       precio: r.precio,
       cantidad: r.cantidad,

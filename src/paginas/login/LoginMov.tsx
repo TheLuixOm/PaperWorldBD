@@ -14,13 +14,20 @@ function LoginMov({ onIrRegistro }: LoginMovProps) {
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
 
+  const normalizarUsuario = (valor: string) => valor.replace(/\s+/g, '');
+
   const iniciarSesion = async (event: React.FormEvent) => {
     event.preventDefault();
-    const usuario = correo.trim();
+    const usuario = normalizarUsuario(correo).trim();
     const clave = contrasena.trim();
 
     if (!usuario || !clave) {
       setError('Ingresa correo o usuario y contraseña.');
+      return;
+    }
+
+    if (correo !== normalizarUsuario(correo)) {
+      setError('El correo o usuario no puede contener espacios.');
       return;
     }
 
@@ -93,8 +100,10 @@ function LoginMov({ onIrRegistro }: LoginMovProps) {
             className="login-mov-input"
             placeholder="Correo o usuario"
             autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
             value={correo}
-            onChange={(event) => setCorreo(event.target.value)}
+            onChange={(event) => setCorreo(normalizarUsuario(event.target.value))}
           />
 
           <label className="login-mov-label" htmlFor="contrasena">
