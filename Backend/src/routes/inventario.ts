@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { authRequired } from '../middleware/auth.js';
+import { requireAnyRole } from '../middleware/auth.js';
 import type { PoolClient } from 'pg';
 import { query, withTransaction } from '../db/query.js';
 import { createClient } from '@supabase/supabase-js';
@@ -6,13 +8,16 @@ import { env } from '../shared/env.js';
 
 export const inventarioRouter = Router();
 
+// Solo admin (rol 1) puede modificar/eliminar productos
+const onlyAdmin: Parameters<typeof requireAnyRole>[0] = ['admin', '1'];
+
 const supabase = env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY
   ? createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
   : null;
 
 type ProductoInventario = {
-  id_producto: string; // bigint como string
-  inventario_id_actualizacion: string; // bigint como string
+  id_producto: string; 
+  inventario_id_actualizacion: string; 
   nombre: string;
   descripcion: string;
   precio: number;
@@ -227,11 +232,12 @@ inventarioRouter.get('/:idProducto', async (req, res, next) => {
   }
 });
 
-inventarioRouter.post('/', async (req, res, next) => {
+inventarioRouter.post('/', authRequired, requireAnyRole(onlyAdmin), async (req, res, next) => {
   try {
     const body = req.body as Partial<{
       id_producto: unknown;
       nombre: unknown;
+      descripcion: unknown;
       precio: unknown;
       imagen: unknown;
       imagen_base64: unknown;
@@ -375,7 +381,7 @@ inventarioRouter.post('/', async (req, res, next) => {
 
 // PUT /api/inventario/:idProducto
 // Actualiza el registro más reciente del producto (sin crear nueva versión)
-inventarioRouter.put('/:idProducto', async (req, res, next) => {
+inventarioRouter.put('/:idProducto', authRequired, requireAnyRole(onlyAdmin), async (req, res, next) => {
   try {
     const idProducto = parseBigintLike(req.params.idProducto);
     if (!idProducto) {
@@ -384,6 +390,7 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
 
     const body = req.body as Partial<{
       nombre: unknown;
+      descripcion: unknown;
       precio: unknown;
       imagen: unknown;
       cantidad: unknown;
@@ -490,7 +497,7 @@ inventarioRouter.put('/:idProducto', async (req, res, next) => {
 
 // DELETE /api/inventario/:idProducto
 // Baja lógica: marca el producto como inactivo (no borra filas ni rompe FKs)
-inventarioRouter.delete('/:idProducto', async (req, res, next) => {
+inventarioRouter.delete('/:idProducto', authRequired, requireAnyRole(onlyAdmin), async (req, res, next) => {
   try {
     const idProducto = parseBigintLike(req.params.idProducto);
     if (!idProducto) {

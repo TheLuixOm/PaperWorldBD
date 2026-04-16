@@ -47,6 +47,23 @@ function mapearProductoDesdeApi(it: {
     } satisfies Producto;
 }
 
+function getRolesFromStorage(): string[] {
+    if (typeof window === 'undefined') return [];
+    try {
+        const raw = window.localStorage.getItem('paperworldRoles');
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed.filter((x) => typeof x === 'string') : [];
+    } catch {
+        return [];
+    }
+}
+
+function esAdmin(): boolean {
+    const roles = getRolesFromStorage();
+    return roles.includes('admin') || roles.includes('3') || roles.includes(3 as any);
+}
+
 function Inventario() {
     const [textoBusqueda, setTextoBusqueda] = useState('');
     const [productos, setProductos] = useState<Producto[]>([]);
@@ -322,17 +339,23 @@ function Inventario() {
         .filter(Boolean)
         .join(' ');
 
+    const esUsuarioAdmin = esAdmin();
+
     return (
         <section className={claseVista} id="inventario">
             <div className="inventarioVistaCambio" key={vistaActual}>
-                {vistaActual === 'agregar' ? (
+                {vistaActual === 'agregar' && esUsuarioAdmin ? (
                     <AgregarProducto onGuardar={guardarNuevoProducto} onCancelar={cerrarVistaFormulario} />
-                ) : vistaActual === 'modificar' && productoEnEdicion ? (
+                ) : vistaActual === 'modificar' && productoEnEdicion && esUsuarioAdmin ? (
                     <ModificarProducto
                         productoInicial={productoEnEdicion}
                         onGuardar={guardarCambiosProducto}
                         onCancelar={cerrarVistaFormulario}
                     />
+                ) : vistaActual === 'agregar' || vistaActual === 'modificar' ? (
+                    <div style={{ padding: 32, textAlign: 'center', color: '#888' }}>
+                        Solo administradores pueden modificar o agregar productos.
+                    </div>
                 ) : (
                     <>
                         <header className="inventarioEncabezado">
@@ -376,6 +399,8 @@ function Inventario() {
                                 type="button"
                                 onClick={abrirVistaAgregarProducto}
                                 aria-label="Añadir nuevo producto"
+                                disabled={!esUsuarioAdmin}
+                                style={!esUsuarioAdmin ? { opacity: 0.5, pointerEvents: 'none' } : {}}
                             >
                                 <span className="inventarioBotonIcono" aria-hidden="true">
                                     +
@@ -420,6 +445,8 @@ function Inventario() {
                                                     type="button"
                                                     aria-label={`Editar ${producto.nombre}`}
                                                     onClick={() => abrirVistaEditarProducto(producto)}
+                                                    disabled={!esUsuarioAdmin}
+                                                    style={!esUsuarioAdmin ? { opacity: 0.5, pointerEvents: 'none' } : {}}
                                                 >
                                                     <svg viewBox="0 0 24 24" focusable="false">
                                                         <path d="M4 20h4l10-10-4-4L4 16z" />
@@ -441,7 +468,9 @@ function Inventario() {
                                                 className="inventarioAccion inventarioAccionEliminar"
                                                 type="button"
                                                 aria-label={`Eliminar ${producto.nombre}`}
-                                                    onClick={() => solicitarEliminarProducto(producto)}
+                                                onClick={() => solicitarEliminarProducto(producto)}
+                                                disabled={!esUsuarioAdmin}
+                                                style={!esUsuarioAdmin ? { opacity: 0.5, pointerEvents: 'none' } : {}}
                                             >
                                                 <svg viewBox="0 0 24 24" focusable="false">
                                                     <path d="M5 7h14" />
@@ -505,6 +534,8 @@ function Inventario() {
                                                     className="inventarioMovilOpcionBoton"
                                                     role="menuitem"
                                                     onClick={() => abrirVistaEditarProducto(producto)}
+                                                    disabled={!esUsuarioAdmin}
+                                                    style={!esUsuarioAdmin ? { opacity: 0.5, pointerEvents: 'none' } : {}}
                                                 >
                                                     Editar
                                                 </button>
@@ -513,6 +544,8 @@ function Inventario() {
                                                     className="inventarioMovilOpcionBoton inventarioMovilOpcionBotonEliminar"
                                                     role="menuitem"
                                                     onClick={() => solicitarEliminarProducto(producto)}
+                                                    disabled={!esUsuarioAdmin}
+                                                    style={!esUsuarioAdmin ? { opacity: 0.5, pointerEvents: 'none' } : {}}
                                                 >
                                                     Eliminar
                                                 </button>
