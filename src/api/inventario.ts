@@ -22,12 +22,29 @@ type InventarioGetResponse = {
 };
 
 async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
+  // Añade el token de autenticación si existe
+  const token = typeof window !== 'undefined' ? window.localStorage.getItem('paperworldToken') : undefined;
+  // Normaliza headers para soportar Headers, array o objeto
+  let baseHeaders: Record<string, string> = {};
+  if (init?.headers) {
+    if (init.headers instanceof Headers) {
+      baseHeaders = Object.fromEntries(init.headers.entries());
+    } else if (Array.isArray(init.headers)) {
+      baseHeaders = Object.fromEntries(init.headers);
+    } else {
+      baseHeaders = { ...init.headers };
+    }
+  }
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...baseHeaders,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
   const res = await fetch(input, {
     ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
+    headers,
   });
 
   if (res.status === 204) {
