@@ -1,0 +1,22 @@
+.inventarioAgregarProveedorVista {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.inventarioFormularioAgregarProveedor {
+  min-height: min(72vh, 760px);
+}
+
+.inventarioFilaImagenProveedor {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
+}
+
+.inventarioAccionesFormularioProveedor {
+  justify-content: flex-start;
+}
+
+@media (max-width: 1100px) {
+  .inventarioFilaImagenProveedor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

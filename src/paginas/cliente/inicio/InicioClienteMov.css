@@ -1,0 +1,607 @@
+.inicioClienteMov {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  color: #0f172a;
+  font-family: 'Inter', sans-serif;
+}
+
+.inicioClienteMovHeader {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(34, 88, 155, 0.08);
+}
+
+.inicioClienteMovTop {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px 6px;
+}
+
+.inicioClienteMovHamb {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(6, 123, 182, 0.08);
+  color: #067bb6;
+  display: grid;
+  place-items: center;
+}
+
+.inicioClienteMovHamb svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.inicioClienteMovMarca {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.inicioClienteMovMarcaIcono {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.inicioClienteMovMarcaTexto {
+  font-family: 'Hurricane', cursive;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inicioClienteMovAcciones {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.usuarioMenu.clienteUsuarioMenuMov {
+  position: static;
+  top: auto;
+  right: auto;
+}
+
+.inicioClienteMovCarrito {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(6, 123, 182, 0.08);
+  color: #067bb6;
+  display: grid;
+  place-items: center;
+  position: relative;
+  text-decoration: none;
+}
+
+.inicioClienteMovCarrito svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.inicioClienteMovCarritoBadge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #067bb6;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
+.inicioClienteMovTotal {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.inicioClienteMovNav {
+  display: flex;
+  gap: 14px;
+  padding: 0 12px 8px;
+}
+
+.inicioClienteMovNavItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.inicioClienteMovNavItemActivo {
+  color: #067bb6;
+  background: rgba(6, 123, 182, 0.08);
+}
+
+.inicioClienteMovNavIcon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inicioClienteMovNavIcon svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.inicioClienteMovMain {
+  padding: 0 12px 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.inicioClienteMovHero {
+  padding: 10px 0 6px;
+}
+
+.inicioClienteMovHeroMarco {
+  border-radius: 14px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0) 45%),
+    radial-gradient(circle at 80% 40%, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 52%),
+    linear-gradient(135deg, #0b3a6a 0%, #124e8e 40%, #0b3a6a 100%);
+  padding: 18px clamp(64px, 24vw, 98px) 14px;
+  text-align: center;
+  color: #ffffff;
+  position: relative;
+}
+
+.inicioClienteMovHeroMarco::before,
+.inicioClienteMovHeroMarco::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: clamp(75px, 15vw, 120px);
+  background-image: url('../../../images/Imagen_inicio.svg');
+  background-position: center;
+  background-size: cover;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.inicioClienteMovHeroMarco::before {
+  left: 0;
+  border-top-right-radius: 20%;
+  border-bottom-right-radius: 10%;
+  mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 100%);
+}
+
+.inicioClienteMovHeroMarco::after {
+  right: 0;
+  border-top-left-radius: 20%;
+  border-bottom-left-radius: 10%;
+  mask-image: linear-gradient(to left, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 100%);
+}
+
+.inicioClienteMovHeroMarco > * {
+  position: relative;
+  z-index: 2;
+}
+
+.inicioClienteMovHeroKicker {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.inicioClienteMovHeroSubkicker {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.inicioClienteMovHeroTitulo {
+  margin: 10px 0 0;
+  font-size: 32px;
+  font-weight: 900;
+  text-shadow: 0 10px 24px rgba(15, 23, 42, 0.35);
+}
+
+.inicioClienteMovHeroTitulo span {
+  color: #ffcf3a;
+}
+
+.inicioClienteMovHeroCategorias {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.inicioClienteMovHeroCategoria {
+  padding: 7px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.inicioClienteMovHeroPie {
+  margin: 10px 0 0;
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.92;
+}
+
+.inicioClienteMovBusquedaWrap {
+  margin-top: 10px;
+  position: relative;
+}
+
+.inicioClienteMovBusqueda {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(34, 88, 155, 0.12);
+  background: #ffffff;
+  padding: 0 12px;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+}
+
+.inicioClienteMovSugerencias {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 10px);
+  background: #ffffff;
+  border: 1px solid rgba(34, 88, 155, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+  padding: 6px;
+  max-height: 240px;
+  overflow: auto;
+  z-index: 30;
+}
+
+.inicioClienteMovSugerencia {
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 10px 10px;
+  border-radius: 12px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+}
+
+.inicioClienteMovSugerencia:hover,
+.inicioClienteMovSugerencia:focus-visible {
+  background: rgba(6, 123, 182, 0.08);
+  outline: none;
+}
+
+.inicioClienteMovSugerenciaNombre {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.inicioClienteMovSugerenciaPrecio {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.inicioClienteMovBusquedaIcono {
+  width: 16px;
+  height: 16px;
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inicioClienteMovBusquedaIcono svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.inicioClienteMovBusquedaInput {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 13px;
+  background: transparent;
+}
+
+.inicioClienteMovSeccion {
+  margin-top: 14px;
+  padding-bottom: 8px;
+}
+
+.inicioClienteMovSeccionEnc {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inicioClienteMovEtiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #067bb6;
+  font-size: 11px;
+  font-weight: 900;
+  padding-left: 12px;
+  position: relative;
+}
+
+.inicioClienteMovEtiqueta::before {
+  content: '';
+  width: 6px;
+  height: 22px;
+  border-radius: 2px;
+  background: #067bb6;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.inicioClienteMovTitulo {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 1000;
+}
+
+.inicioClienteMovCarrusel {
+  margin-top: 10px;
+  position: relative;
+}
+
+.inicioClienteMovCarruselControles {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 45px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.inicioClienteMovFlecha {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 88, 155, 0.16);
+  background: rgba(255, 255, 255, 0.78);
+  color: #0f172a;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.14);
+  backdrop-filter: blur(10px);
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  font-weight: 900;
+  pointer-events: auto;
+}
+
+.inicioClienteMovFlechaIzq {
+  left: -6px;
+}
+
+.inicioClienteMovFlechaDer {
+  right: -6px;
+}
+
+.inicioClienteMovCarruselLista {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 150px;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 2px 8px;
+  scroll-snap-type: x mandatory;
+  cursor: grab;
+  touch-action: pan-x;
+}
+
+.inicioClienteMovCarruselLista:active {
+  cursor: grabbing;
+}
+
+.inicioClienteMovProducto {
+  scroll-snap-align: start;
+}
+
+.inicioClienteMovProductoMarco {
+  position: relative;
+  border-radius: 14px;
+  background: #f1f5f9;
+  overflow: hidden;
+  height: 160px;
+  border: 1px solid rgba(34, 88, 155, 0.08);
+  display: grid;
+  place-items: center;
+}
+
+.inicioClienteMovProductoDescuento {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #067bb6;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.inicioClienteMovProductoAcciones {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inicioClienteMovAccion {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 88, 155, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  color: #475569;
+  display: grid;
+  place-items: center;
+}
+
+.inicioClienteMovAccion svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.inicioClienteMovProductoImagen {
+  width: 100%;
+  height: 100%;
+}
+
+.inicioClienteMovProductoImagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 1;
+}
+
+.inicioClienteMovProductoInfo {
+  padding: 8px 2px 0;
+}
+
+.inicioClienteMovProductoNombre {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 900;
+  color: #0f172a;
+  text-transform: uppercase;
+}
+
+.inicioClienteMovProductoPrecio {
+  margin: 6px 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.inicioClienteMovProductoPrecioActual {
+  color: #0f172a;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.inicioClienteMovProductoPrecioAnterior {
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 800;
+  text-decoration: line-through;
+}
+
+.inicioClienteMovFooter {
+  min-height: calc(78px + env(safe-area-inset-bottom));
+  height: auto;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #067bb6;
+  margin-top: auto;
+  margin-left: -12px;
+  margin-right: -12px;
+  margin-bottom: 0;
+}
+
+.inicioClienteMovFab {
+  position: fixed;
+  right: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+  border: 2px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.22);
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  z-index: 30;
+  transition: bottom 0.15s ease;
+}
+
+.inicioClienteMovFab svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

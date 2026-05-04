@@ -1,0 +1,644 @@
+.inicioCliente {
+  min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
+  width: 100%;
+  background: #ffffff;
+  color: #0f172a;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.inicioClienteEncabezado {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(34, 88, 155, 0.08);
+}
+
+.inicioClienteBarraSuperior {
+  padding: 10px 18px 0;
+}
+
+.inicioClienteBarraInterior {
+  display: grid;
+  grid-template-columns: auto minmax(260px, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 10px;
+}
+
+.inicioClienteMarca {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+}
+
+.inicioClienteMarcaIcono {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.inicioClienteMarcaTexto {
+  font-family: 'Hurricane', cursive;
+  font-size: 34px;
+  font-weight: 400;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.inicioClienteBuscador {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid #e5ebf3;
+  background: #ffffff;
+  padding: 0 14px;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
+}
+
+.inicioClienteSugerencias {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 10px);
+  background: #ffffff;
+  border: 1px solid rgba(34, 88, 155, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+  padding: 6px;
+  max-height: 280px;
+  overflow: auto;
+  z-index: 30;
+}
+
+.inicioClienteSugerencia {
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 10px 10px;
+  border-radius: 12px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+}
+
+.inicioClienteSugerencia:hover,
+.inicioClienteSugerencia:focus-visible {
+  background: rgba(6, 123, 182, 0.08);
+  outline: none;
+}
+
+.inicioClienteSugerenciaNombre {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.inicioClienteSugerenciaPrecio {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.inicioClienteBuscadorIcono {
+  width: 16px;
+  height: 16px;
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inicioClienteBuscadorIcono svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.inicioClienteBuscadorInput {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 13px;
+  color: #0f172a;
+  background: transparent;
+}
+
+.inicioClienteBuscadorInput::placeholder {
+  color: #94a3b8;
+}
+
+.inicioClienteAcciones {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Reutiliza UsuarioMenu, pero embebido en el header (no fijo). */
+.usuarioMenu.clienteUsuarioMenu {
+  position: static;
+  top: auto;
+  right: auto;
+}
+
+.inicioClienteCarrito {
+  position: relative;
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  text-decoration: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.inicioClienteCarrito:hover {
+  background: rgba(6, 123, 182, 0.08);
+}
+
+.inicioClienteCarritoIcono svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.inicioClienteCarritoContador {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #067bb6;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.inicioClienteTotal {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.inicioClienteBarraNav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 2px 10px;
+}
+
+.inicioClienteNavItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.inicioClienteNavItem:hover {
+  background: rgba(6, 123, 182, 0.08);
+  color: #067bb6;
+}
+
+.inicioClienteNavItemActivo {
+  color: #067bb6;
+}
+
+.inicioClienteNavIcono {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inicioClienteNavIcono svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.inicioClienteContenido {
+  padding: 0 18px 36px;
+  flex: 1;
+}
+
+.inicioClienteFooter {
+  min-height: 76px;
+  height: auto;
+  background: #067BB6;
+}
+
+.inicioClienteHero {
+  padding: 12px 0 8px;
+}
+
+.inicioClienteHeroMarco {
+  width: 100%;
+  min-height: 310px;
+  border-radius: 14px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0) 45%),
+    radial-gradient(circle at 80% 40%, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 52%),
+    linear-gradient(135deg, #0b3a6a 0%, #124e8e 40%, #0b3a6a 100%);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  padding: 26px clamp(120px, 20vw, 280px) 20px;
+  position: relative;
+}
+
+.inicioClienteHeroMarco::before,
+.inicioClienteHeroMarco::after {
+  content: '';
+  position: absolute;
+  width: clamp(150px, 30vw, 500px);
+  height: 100%;
+  background-image: url('../../../images/Imagen_inicio.svg');
+  background-position: center;
+  background-size: cover;
+  opacity: 0.85;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.inicioClienteHeroMarco::before {
+  left: 0;
+  border-top-right-radius: 20%;
+  border-bottom-right-radius: 10%;
+  mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 72%, rgba(0, 0, 0, 0) 100%);
+}
+
+.inicioClienteHeroMarco::after {
+  right: 0;
+  border-top-left-radius: 20%;
+  border-bottom-left-radius: 10%;
+  mask-image: linear-gradient(to left, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 72%, rgba(0, 0, 0, 0) 100%);
+}
+
+.inicioClienteHeroMarco > * {
+  position: relative;
+  z-index: 2;
+}
+
+.inicioClienteHeroTexto {
+  text-align: center;
+  color: #ffffff;
+}
+
+.inicioClienteHeroKicker {
+  margin: 0;
+  font-size: clamp(18px, 2.4vw, 28px);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.inicioClienteHeroSubkicker {
+  margin: 6px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.inicioClienteHeroTitulo {
+  margin: 14px 0 0;
+  font-size: clamp(34px, 5vw, 54px);
+  font-weight: 900;
+  text-shadow: 0 10px 24px rgba(15, 23, 42, 0.35);
+}
+
+.inicioClienteHeroTitulo span {
+  color: #ffcf3a;
+}
+
+.inicioClienteHeroCategorias {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.inicioClienteHeroCategoria {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 700;
+  backdrop-filter: blur(10px);
+}
+
+.inicioClienteHeroPie {
+  margin: 16px 0 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.inicioClienteSeccion {
+  margin-top: 20px;
+}
+
+.inicioClienteSeccionEncabezado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.inicioClienteEtiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #067bb6;
+  font-size: 11px;
+  font-weight: 800;
+  padding-left: 10px;
+  position: relative;
+}
+
+.inicioClienteEtiqueta::before {
+  content: '';
+  width: 6px;
+  height: 22px;
+  border-radius: 2px;
+  background: #067bb6;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.inicioClienteSeccionTitulo {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.inicioClienteCarruselHorizontal {
+  position: relative;
+}
+
+.inicioClienteCarruselControles {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.inicioClienteCarruselBoton {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 88, 155, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, color 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+}
+
+.inicioClienteCarruselBoton:hover {
+  transform: translateY(-1px);
+  color: #067bb6;
+  background: #ffffff;
+}
+
+.inicioClienteCarruselBoton svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.inicioClienteCarruselBotonIzq {
+  position: absolute;
+  left: -6px;
+}
+
+.inicioClienteCarruselBotonDer {
+  position: absolute;
+  right: -6px;
+}
+
+.inicioClienteCarrusel {
+  margin-top: 12px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 190px;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior: contain;
+  cursor: grab;
+  touch-action: pan-x;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.inicioClienteCarruselArrastrando {
+  scroll-snap-type: none;
+  cursor: grabbing;
+}
+
+.inicioClienteCarrusel::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.inicioClienteCarrusel:active {
+  cursor: grabbing;
+}
+
+.inicioClienteProducto {
+  scroll-snap-align: start;
+}
+
+.inicioClienteProductoMarco {
+  position: relative;
+  border-radius: 14px;
+  background: #f1f5f9;
+  overflow: hidden;
+  height: 190px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(34, 88, 155, 0.08);
+}
+
+.inicioClienteProductoDescuento {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #067bb6;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.inicioClienteProductoAcciones {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inicioClienteProductoAccion {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 88, 155, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  transition: transform 0.15s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.inicioClienteProductoAccion:hover {
+  transform: translateY(-1px);
+  color: #067bb6;
+  background: #ffffff;
+}
+
+.inicioClienteProductoAccion svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.inicioClienteProductoImagen {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.inicioClienteProductoImagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 1;
+}
+
+.inicioClienteProductoInfo {
+  padding: 10px 2px 0;
+}
+
+.inicioClienteProductoNombre {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  color: #0f172a;
+  text-transform: uppercase;
+}
+
+.inicioClienteProductoPrecio {
+  margin: 8px 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.inicioClienteProductoPrecioActual {
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.inicioClienteProductoPrecioAnterior {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: line-through;
+}
+
+@media (max-width: 500px) {
+  .inicioClienteBarraInterior {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .inicioClienteAcciones {
+    justify-content: flex-end;
+  }
+
+  .inicioClienteBarraNav {
+    justify-content: flex-start;
+  }
+
+  .inicioClienteCarrusel {
+    grid-auto-columns: 170px;
+  }
+}

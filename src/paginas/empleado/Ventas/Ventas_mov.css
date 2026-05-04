@@ -1,0 +1,350 @@
+
+.ventas_escMov {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    color: #0f172a;
+    font-family: 'Inter', sans-serif;
+}
+
+.panel-detalleMov,
+.lista-ventaMov {
+	background: #f2f4fa;
+	border-radius: 12px;
+	padding: 16px;
+
+}
+.encabezadoMov {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	height: fit-content;
+	padding: 3%;
+
+}
+
+.VentasTituloMov {
+    margin: 0;
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: #111827;
+}
+
+.VentasSubtituloMov {
+    display: flex;
+    align-items: center;
+	gap: 10px;
+    margin: 0;
+	font-size:  clamp(20px, 2vw, 30px);
+	padding: 3%;
+    font-weight: 700;
+	color: #2c2c2c;
+}
+
+.VentasSubtituloMov::before {
+	content: '';
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: #067bb6;
+	flex: 0 0 auto;
+}
+
+.busqueda-wrapMov {
+	position: relative;
+	flex: 0 1 420px;
+	width: min(100%, 420px);
+	margin: 0 auto;
+	max-width: 420px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	height: 46px;
+	padding: 0 16px;
+	border-radius: 14px;
+	background: #ffffff;
+	border: 1px solid #e3e8ef;
+	box-shadow: 0 2px 8px rgba(16, 24, 40, 0.04);
+}
+
+.encabezadoMov .inventarioUsuarioMenu {
+	margin-left: auto;
+}
+ 
+
+.encabezadoMov input {
+	width: 100%;
+	height: 100%;
+	border: none;
+	outline: none;
+	border-radius: 0;
+	padding: 0;
+	font-size: 17px;
+	color: #334155;
+	background: transparent;
+    align-items: center;
+}
+
+.encabezadoMov input::placeholder {
+	color: #8b97a6;
+}
+
+
+.panel-detalleMov {
+	width:94%;
+    height: clamp(190px, 25vh, 220px);
+	margin-left: 3%;
+}
+
+
+.descripcion_productoMov {
+    margin: 0;
+    font-size:  clamp(20px, 2vw, 30px);
+}
+
+.detalle-productoMov {
+    display: grid;
+    grid-template-areas: 
+        "imagen dato1"
+        "imagen dato2"
+		"imagen dato3"
+		"imagen dato4"
+		"imagen dato5"
+		"imagen dato6";
+	grid-template-columns: 1fr 1fr 5%;
+	gap: 0px 0px; 
+    align-items: center;
+	width: 100%;
+}
+
+
+.detalle-productoMov p:nth-of-type(1) { grid-area: dato1; }
+.detalle-productoMov p:nth-of-type(2) { grid-area: dato2; }
+.detalle-productoMov p:nth-of-type(3) { grid-area: dato3; }
+.detalle-productoMov p:nth-of-type(4) { grid-area: dato4; }
+.detalle-productoMov p:nth-of-type(5) { grid-area: dato5; }
+.detalle-productoMov p:nth-of-type(6) { grid-area: dato6; }
+
+.detalle-productoMov p {
+	margin: 3% 0 3% 0;
+}
+
+.detalle-productoMov p strong {
+	font-weight: 800;
+}
+
+
+.detalle-productoMov p:nth-of-type(7) { 
+    grid-area: imagen; 
+	justify-self: center;
+    justify-content: start;
+}
+
+.detalle-productoMov p:nth-of-type(7) img {
+	width: 100px;
+	height: 100px; 
+	object-fit: cover;
+	border-radius: 12px;
+}
+
+.lista-busquedaMov {
+	list-style: none;
+	position: absolute;
+	top: calc(100% + 8px);
+	left: 0;
+	right: 0;
+	z-index: 20;
+	margin: 0;
+	padding: 0;
+	border: 1px solid #d8e0e8;
+	border-radius: 8px;
+	max-height: 260px;
+	overflow-y: auto;
+	background: #ffffff;
+	box-shadow: 0 12px 30px rgba(12, 28, 44, 0.14); 
+}
+
+.lista-busquedaMov li {
+	padding: 10px;
+	cursor: pointer;
+	border-top: 1px solid #edf1f5;
+	transition: background-color 0.15s ease;
+}
+
+.lista-busquedaMov li:first-child {
+	border-top: 0;
+}
+
+.lista-busquedaMov li.activoMov {
+	background: #edf4ff;
+}
+
+.lista-busquedaMov li:hover {
+	background: #edf4ff;
+}
+
+
+
+.lista-ventaMov {
+	height: clamp(220px, 30vh, 340px);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	margin: 0 3% 0 3%;
+}
+
+.item-ventaMov {
+	display: grid;
+	grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) minmax(220px, 1fr);
+	align-items: center;
+	padding: 10px 0;
+	border-top: 1px solid #edf1f5;
+	gap: 18px;
+}
+
+.item-ventaMov:first-child {
+	border-top: 0;
+}
+
+.controles-cantidadMov {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	justify-content: center;
+	justify-self: end;
+	padding-left: 12px;
+	border-left: 1px solid #e3e8ef;
+}
+
+.controles-cantidadMov button {
+	width: 22px;
+	height: 22px;
+	border: none;
+	background: transparent;
+	color: #1f2937;
+	font-size: 26px;
+	line-height: 1;
+	padding: 0;
+	cursor: pointer;
+}
+
+.cantidad-chipMov {
+	min-width: 30px;
+	height: 30px;
+	padding: 0 10px;
+	border-radius: 10px;
+	background: #e8edf4;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	color: #1f2937;
+}
+
+.lista-venta-itemsMov {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding-right: 6px;
+}
+
+.item-venta-infoMov {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	min-width: 0;
+	width: 100%;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.item-venta-infoMov strong {
+	font-weight: 600;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+.item-venta-infoMov span {
+	font-size: 0.9rem;
+	color: #5b6570;
+}
+
+.item-venta-preciosMov {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 20px;
+	width: 100%;
+	color: #4b5563;
+}
+
+.item-venta-preciosMov strong {
+	font-size: 0.96rem;
+	color: #111827;
+}
+
+.total-ventaMov {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid #dbe3ee;
+	font-size: 1rem;
+	color: #1f2937;
+}
+
+.total-ventaMov strong {
+	font-size: 1.1rem;
+	color: #111827;
+}
+
+.total-compraMov {
+	background: #f2f4fa;
+	border-radius: 12px;
+	padding: 3%;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin: 0 3% 0 3%;
+}
+
+.total-compra-resumenMov {
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+	color: #1f2937;
+}
+
+.total-compra-resumenMov strong {
+	font-size: 1.05rem;
+	font-weight: 800;
+	color: #111827;
+}
+
+.boton-procesarMov {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 48px;
+	min-width: 220px;
+	padding: 0 20px;
+	border: none;
+	border-radius: 10px;
+	background: #067bb6;
+	color: #ffffff;
+	font-size: 17px;
+	font-weight: 700;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.boton-procesarMov:disabled {
+	background: #9db3c2;
+	cursor: not-allowed;
+}
+

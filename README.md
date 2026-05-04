@@ -1,2 +1,1 @@
-# twp_inventario
-adaptando aplicacion paperworld a twp
+# Adaptando administrador de inventario paperworld a twp

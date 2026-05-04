@@ -1,0 +1,388 @@
+.catalogoMov .inicioClienteMovMain {
+  padding-bottom: 0;
+}
+
+.catalogoMovBusquedaWrap {
+  position: relative;
+}
+
+.catalogoMovSugerencias {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 10px);
+  background: #ffffff;
+  border: 1px solid rgba(34, 88, 155, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+  padding: 6px;
+  max-height: 240px;
+  overflow: auto;
+  z-index: 30;
+}
+
+.catalogoMovSugerencia {
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 10px 10px;
+  border-radius: 12px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+}
+
+.catalogoMovSugerencia:hover,
+.catalogoMovSugerencia:focus-visible {
+  background: rgba(6, 123, 182, 0.08);
+  outline: none;
+}
+
+.catalogoMovSugerenciaNombre {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.catalogoMovSugerenciaPrecio {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.catalogoMovControles {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.catalogoMovControlesWrap {
+  position: relative;
+}
+
+.catalogoMovControl {
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(34, 88, 155, 0.12);
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.catalogoMovControlActivo {
+  border-color: rgba(6, 123, 182, 0.35);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+}
+
+.catalogoMovPanel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 10px);
+  border-radius: 14px;
+  border: 1px solid rgba(34, 88, 155, 0.12);
+  background: #f3f5fb;
+  padding: 12px 12px 10px;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+  z-index: 26;
+}
+
+.catalogoMovPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 2px 10px;
+}
+
+.catalogoMovPanelTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 900;
+  color: #067bb6;
+}
+
+.catalogoMovPanelAll {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.catalogoMovPanelLista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 240px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.catalogoMovOpcion {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 10px;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.catalogoMovOpcion input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.catalogoMovOpcionCaja {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.catalogoMovOpcionTexto {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.catalogoMovOpcion:has(input:checked) .catalogoMovOpcionCaja {
+  background: #067BB6;
+  border-color: #067BB6;
+}
+
+.catalogoMovControlIcono {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f172a;
+}
+
+.catalogoMovControlIcono svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.catalogoMovGrid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding-bottom: 12px;
+}
+
+.catalogoMovCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.catalogoMovCardMarco {
+  position: relative;
+  border-radius: 14px;
+  background: #f1f5f9;
+  overflow: hidden;
+  height: 170px;
+  border: 1px solid rgba(34, 88, 155, 0.08);
+  display: grid;
+  place-items: center;
+}
+
+.catalogoMovTag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.catalogoMovTagSpecial {
+  background: rgba(255, 207, 58, 0.28);
+  color: #0f172a;
+}
+
+.catalogoMovTagXpress {
+  background: rgba(6, 123, 182, 0.14);
+  color: #067bb6;
+}
+
+.catalogoMovFav {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 88, 155, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  color: #475569;
+  display: grid;
+  place-items: center;
+}
+
+.catalogoMovFavActiva {
+  color: #067bb6;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.catalogoMovFavActiva svg {
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+.catalogoMovFav svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.catalogoMovImagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 1;
+  display: block;
+}
+
+.catalogoMovImagen {
+  width: 100%;
+  height: 100%;
+}
+
+.catalogoMovMiniCarrito {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 10px;
+  border: none;
+  background: #067bb6;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+}
+
+.catalogoMovMiniCarrito svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.catalogoMovInfo {
+  padding: 8px 2px 0;
+}
+
+.catalogoMovNombre {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  color: #334155;
+}
+
+.catalogoMovPrecio {
+  margin: 6px 0 0;
+}
+
+.catalogoMovPrecioActual {
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.catalogoMovDescuento {
+  margin: 2px 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.catalogoMovPrecioAnterior {
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 800;
+  text-decoration: line-through;
+}
+
+.catalogoMovDescuentoTexto {
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.catalogoMovFab {
+  position: fixed;
+  right: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+  border: 2px solid rgba(6, 123, 182, 0.35);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.22);
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  z-index: 30;
+  transition: bottom 0.15s ease;
+}
+
+.catalogoMovFabIcono svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.catalogoMovFabPlus {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #067bb6;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 1000;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
